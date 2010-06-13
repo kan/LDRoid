@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">LDRoid</string>
+    <string name="prev_button">&lt;&lt;Prev</string>
+    <string name="next_button">Next&gt;&gt;</string>
+    <string name="open_button">Open</string>
+    <string name="pin_button">Pin</string>
+    <string name="menu_reload">リロード</string>
+    <string name="pref_account_title">アカウント設定</string>
+    <string name="pref_account_summary">livedoor Readerのアカウント設定</string>
+    <string name="pref_login_id_title">livedoor ID</string>
+    <string name="pref_login_id_summary">livedoor IDを入力して下さい</string>
+    <string name="pref_password_title">パスワード</string>
+    <string name="pref_password_summary">パスワードを入力して下さい</string>
+	<string name="menu_setting">設定</string>
+</resources>

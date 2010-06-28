@@ -21,12 +21,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import android.content.Context;
-import android.content.SharedPreferences;
-import android.preference.PreferenceManager;
 
 public class LDRClient extends DefaultHttpClient {
-	
 	public class Subscribe extends Object {
 		public List<String> tags = new ArrayList<String>();
 		public String folder;
@@ -74,25 +70,19 @@ public class LDRClient extends DefaultHttpClient {
 	private static String auth_url = "https://member.livedoor.com/login/";
 	private static String domain = "http://reader.livedoor.com/";
 	
-	private String login_id;
-	private String password;
+	private LDRClientAccount account = new LDRClientAccount();
 	private String session_id = null;
 
-	public LDRClient(Context context) {
+	public LDRClient(LDRClientAccount account) {
 		super();
 		
-		getAccount(context);
+		this.account.login_id = account.login_id;
+		this.account.password = account.password;
 	}
 
-	private void getAccount(Context context) {
-		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(context);
-		setLoginId(pref.getString("login_id", null));
-		password = pref.getString("password", null);
-	}
-	
-	public List<Subscribe> subs(Context context, int unread) {
+	public List<Subscribe> subs(int unread) {
 		try {
-			login(context);
+			login();
 
 			HttpPost req = new HttpPost(domain + "/api/subs");
 	        List<NameValuePair> params = new ArrayList<NameValuePair>(1);
@@ -122,9 +112,9 @@ public class LDRClient extends DefaultHttpClient {
 		return null;
 	}
 	
-	public List<Feed> unRead(Context context, String subscribe_id) {
+	public List<Feed> unRead(String subscribe_id) {
 		try {
-			login(context);
+			login();
 
 			HttpPost req = new HttpPost(domain + "/api/unread");
 	        List<NameValuePair> params = new ArrayList<NameValuePair>(1);
@@ -155,9 +145,9 @@ public class LDRClient extends DefaultHttpClient {
 		return null;
 	}
 	
-	public void touchAll(Context context, String subscribe_id) {
+	public void touchAll(String subscribe_id) {
 		try {
-			login(context);
+			login();
 
 			HttpPost req = new HttpPost(domain + "/api/touch_all");
 	        List<NameValuePair> params = new ArrayList<NameValuePair>(1);
@@ -174,9 +164,9 @@ public class LDRClient extends DefaultHttpClient {
 		}
 	}
 	
-	public void pin_add(Context context, Feed feed) {
+	public void pin_add(Feed feed) {
 		try {
-			login(context);
+			login();
 
 			HttpPost req = new HttpPost(domain + "/api/pin/add");
 	        List<NameValuePair> params = new ArrayList<NameValuePair>(1);
@@ -218,12 +208,9 @@ public class LDRClient extends DefaultHttpClient {
 		return null;
 	}
 
-	private void login(Context context) throws ClientProtocolException, IOException {
+	private void login() throws ClientProtocolException, IOException {
 		if (session_id != null) {
 			return;
-		}
-		if (getLoginId() == null || password == null) {
-			getAccount(context);
 		}
 		
 		HttpPost request = new HttpPost(auth_url);
@@ -232,8 +219,8 @@ public class LDRClient extends DefaultHttpClient {
 		// .next, .svÇ™ñ≥Ç¢Ç∆è„éËÇ≠Ç¢Ç©Ç»Ç¢ñÕól
         List<NameValuePair> params = new ArrayList<NameValuePair>(1);
         
-        params.add(new BasicNameValuePair("livedoor_id", getLoginId()));
-        params.add(new BasicNameValuePair("password", password));
+        params.add(new BasicNameValuePair("livedoor_id", account.login_id));
+        params.add(new BasicNameValuePair("password", account.password));
         params.add(new BasicNameValuePair(".next", "http://reader.livedoor.com/reader/"));
         params.add(new BasicNameValuePair(".sv", "reader"));
         
@@ -254,13 +241,5 @@ public class LDRClient extends DefaultHttpClient {
 			}
 		}
 
-	}
-
-	public void setLoginId(String login_id) {
-		this.login_id = login_id;
-	}
-
-	public String getLoginId() {
-		return login_id;
 	}
 }

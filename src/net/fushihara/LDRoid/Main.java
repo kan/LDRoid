@@ -6,7 +6,9 @@ import java.util.List;
 import net.fushihara.LDRoid.LDRClient.Subscribe;
 import android.app.ListActivity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -15,7 +17,10 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 public class Main extends ListActivity {
-    public static final String KEY_SUBS_ID = "sub_id";
+    public static final String KEY_LOGIN_ID = "login_id";
+    public static final String KEY_PASSWORD = "password";
+    public static final String KEY_SUBS_ID  = "subs_id";
+    public static final String KEY_SUBS_TITLE = "subs_title";
 
 	private static final int MENU_RELOAD_ID  = 0;
 	private static final int MENU_SETTING_ID = 1;
@@ -30,7 +35,7 @@ public class Main extends ListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-		loadSubs();
+		//loadSubs();
     }
     
     @Override
@@ -41,22 +46,31 @@ public class Main extends ListActivity {
     }
 
 	private void loadSubs() {
-		List<String> items = new ArrayList<String>();
-
 		if ( client == null ) {
-			client = new LDRClient(this);
-		}
-		subs = client.subs(this, 1);
-		
-		if (subs == null) {
-			if (client.getLoginId() == null) {
-	        	Intent intent = new Intent(this, Setting.class);
+		    LDRClientAccount account = getAccount();
+
+			if (account.isEmpty()) {
+				// ID/PW未設定
+ 	        	Intent intent = new Intent(this, Setting.class);
 	        	startActivity(intent);
-			} else {
-				Toast.makeText(this, "LDR connect faild", Toast.LENGTH_LONG).show();
+	        	return;
 			}
+			client = new LDRClient(account);
+		}
+
+		GetSubsTask task = new GetSubsTask(this);
+		task.execute(client);
+	}
+	
+	public void setSubs(List<Subscribe> result) {
+		if (result == null) {
+			Toast.makeText(this, "no feed", Toast.LENGTH_LONG).show();
 			return;
 		}
+		
+		subs = result;
+
+		List<String> items = new ArrayList<String>();
 		for (Subscribe sub: subs) {
 			items.add(sub.title + " (" + sub.unread_count + ")" );
 		}
@@ -64,6 +78,14 @@ public class Main extends ListActivity {
 		ArrayAdapter<String> notes = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, items);
 	    // ListActivityにアイテムリストをセットする
 	    setListAdapter(notes);
+	}
+
+	private LDRClientAccount getAccount() {
+		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+		LDRClientAccount account = new LDRClientAccount();
+		account.login_id = pref.getString("login_id", null);
+		account.password = pref.getString("password", null);
+		return account;
 	}
 
 	@Override
@@ -97,8 +119,11 @@ public class Main extends ListActivity {
         super.onListItemClick(l, v, position, id);
         Intent i = new Intent(this, FeedView.class);
         Subscribe sub = subs.get(position);
+        LDRClientAccount account = getAccount();
+		i.putExtra(KEY_LOGIN_ID, account.login_id);
+        i.putExtra(KEY_PASSWORD, account.password);
         i.putExtra(KEY_SUBS_ID, sub.subscribe_id);
-        System.out.println(sub.subscribe_id);
+        i.putExtra(KEY_SUBS_TITLE, sub.title);
         startActivity(i);
     }
 }

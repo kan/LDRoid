@@ -8,6 +8,7 @@ public class SetPinTask extends AsyncTask<Feed, Void, String> {
 
 	private FeedView  view;
 	private LDRClient client;
+	private Exception error = null;
 	
 	public SetPinTask(FeedView view, LDRClient client) {
 		this.view   = view;
@@ -16,12 +17,24 @@ public class SetPinTask extends AsyncTask<Feed, Void, String> {
 	
 	@Override
 	protected String doInBackground(Feed... feeds) {
-		client.pin_add(feeds[0]);
-		return feeds[0].title;
+		try {
+			client.pin_add(feeds[0]);
+			return feeds[0].title;
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			error = e;
+			return null;
+		}
 	}
 
 	@Override
 	protected void onPostExecute(String result) {
-		Toast.makeText(view, "w"+result+"x‚ğƒsƒ“‚É“o˜^‚µ‚Ü‚µ‚½", Toast.LENGTH_LONG).show();
+		if (error != null) {
+			Toast.makeText(view, error.getMessage(), Toast.LENGTH_LONG).show();
+		}
+		else {
+			Toast.makeText(view, "w"+result+"x‚ğƒsƒ“‚É“o˜^‚µ‚Ü‚µ‚½", Toast.LENGTH_LONG).show();
+		}
 	}
 }

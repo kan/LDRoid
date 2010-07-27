@@ -1,20 +1,24 @@
 package net.fushihara.LDRoid;
 
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.http.Header;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.BufferedHttpEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.json.JSONArray;
@@ -80,108 +84,80 @@ public class LDRClient extends DefaultHttpClient {
 		this.account.password = account.password;
 	}
 
-	public List<Subscribe> subs(int unread) {
-		try {
-			login();
+	public List<Subscribe> subs(int unread) throws Exception {
+		login();
+		
 
-			HttpPost req = new HttpPost(domain + "/api/subs");
-	        List<NameValuePair> params = new ArrayList<NameValuePair>(1);
-	        
-	        params.add(new BasicNameValuePair("unread", String.valueOf(unread)));
-	        params.add(new BasicNameValuePair("ApiKey", session_id));
+		HttpPost req = new HttpPost(domain + "/api/subs");
+        List<NameValuePair> params = new ArrayList<NameValuePair>(1);
+        
+        params.add(new BasicNameValuePair("unread", String.valueOf(unread)));
+        params.add(new BasicNameValuePair("ApiKey", session_id));
 
-			req.setEntity(new UrlEncodedFormEntity(params));
-	        HttpResponse response = execute(req);
+		req.setEntity(new UrlEncodedFormEntity(params));
+        HttpResponse response = execute(req);
+		
+		JSONArray json = new JSONArray(getContent(response));
+		List<Subscribe> items = new ArrayList<Subscribe>();
+		for (int i = 0; i < json.length(); i++) {
+		    JSONObject obj = json.getJSONObject(i);
+		    items.add(new Subscribe(obj));
+		}
 			
-			JSONArray json = new JSONArray(getContent(response));
-			List<Subscribe> items = new ArrayList<Subscribe>();
-			for (int i = 0; i < json.length(); i++) {
-			    JSONObject obj = json.getJSONObject(i);
-			    items.add(new Subscribe(obj));
-			}
-			
-			return items;
-		} catch (ClientProtocolException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (JSONException e) {
-			e.printStackTrace();
+		return items;
+	}
+	
+	public List<Feed> unRead(String subscribe_id) throws Exception {
+
+		login();
+
+		HttpPost req = new HttpPost(domain + "/api/unread");
+        List<NameValuePair> params = new ArrayList<NameValuePair>(1);
+        
+        params.add(new BasicNameValuePair("subscribe_id", subscribe_id));
+        params.add(new BasicNameValuePair("ApiKey", session_id));
+
+		req.setEntity(new UrlEncodedFormEntity(params));
+        HttpResponse response = execute(req);
+
+        JSONObject jsonroot = new JSONObject(getContent(response));
+        JSONArray json = jsonroot.getJSONArray("items");
+		List<Feed> items = new ArrayList<Feed>();
+		for (int i = 0; i < json.length(); i++) {
+		    JSONObject obj = json.getJSONObject(i);
+		    items.add(new Feed(obj));
 		}
 		
-		return null;
+		return items;
 	}
 	
-	public List<Feed> unRead(String subscribe_id) {
-		try {
-			login();
+	public void touchAll(String subscribe_id) throws Exception {
 
-			HttpPost req = new HttpPost(domain + "/api/unread");
-	        List<NameValuePair> params = new ArrayList<NameValuePair>(1);
-	        
-	        params.add(new BasicNameValuePair("subscribe_id", subscribe_id));
-	        params.add(new BasicNameValuePair("ApiKey", session_id));
+		login();
 
-			req.setEntity(new UrlEncodedFormEntity(params));
-	        HttpResponse response = execute(req);
+		HttpPost req = new HttpPost(domain + "/api/touch_all");
+        List<NameValuePair> params = new ArrayList<NameValuePair>(1);
+        
+        params.add(new BasicNameValuePair("subscribe_id", subscribe_id));
+        params.add(new BasicNameValuePair("ApiKey", session_id));
 
-	        JSONObject jsonroot = new JSONObject(getContent(response));
-	        JSONArray json = jsonroot.getJSONArray("items");
-			List<Feed> items = new ArrayList<Feed>();
-			for (int i = 0; i < json.length(); i++) {
-			    JSONObject obj = json.getJSONObject(i);
-			    items.add(new Feed(obj));
-			}
-			
-			return items;
-		} catch (ClientProtocolException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (JSONException e) {
-			e.printStackTrace();
-		}
-		
-		return null;
+		req.setEntity(new UrlEncodedFormEntity(params));
+        execute(req);
 	}
 	
-	public void touchAll(String subscribe_id) {
-		try {
-			login();
+	public void pin_add(Feed feed) throws Exception {
 
-			HttpPost req = new HttpPost(domain + "/api/touch_all");
-	        List<NameValuePair> params = new ArrayList<NameValuePair>(1);
-	        
-	        params.add(new BasicNameValuePair("subscribe_id", subscribe_id));
-	        params.add(new BasicNameValuePair("ApiKey", session_id));
+		login();
 
-			req.setEntity(new UrlEncodedFormEntity(params));
-	        execute(req);
-		} catch (ClientProtocolException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
-	
-	public void pin_add(Feed feed) {
-		try {
-			login();
+		HttpPost req = new HttpPost(domain + "/api/pin/add");
+        List<NameValuePair> params = new ArrayList<NameValuePair>(1);
+        
+        params.add(new BasicNameValuePair("title", feed.title));
+        params.add(new BasicNameValuePair("link", feed.link));
+        params.add(new BasicNameValuePair("ApiKey", session_id));
 
-			HttpPost req = new HttpPost(domain + "/api/pin/add");
-	        List<NameValuePair> params = new ArrayList<NameValuePair>(1);
-	        
-	        params.add(new BasicNameValuePair("title", feed.title));
-	        params.add(new BasicNameValuePair("link", feed.link));
-	        params.add(new BasicNameValuePair("ApiKey", session_id));
-
-			req.setEntity(new UrlEncodedFormEntity(params, "utf-8"));
-	        execute(req);
-		} catch (ClientProtocolException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
+		req.setEntity(new UrlEncodedFormEntity(params, "utf-8"));
+        execute(req);
 	}
 
 	// HttpResponseのbodyを取得
@@ -208,7 +184,7 @@ public class LDRClient extends DefaultHttpClient {
 		return null;
 	}
 
-	private void login() throws ClientProtocolException, IOException {
+	private void login() throws Exception {
 		if (session_id != null) {
 			return;
 		}
@@ -240,6 +216,27 @@ public class LDRClient extends DefaultHttpClient {
 				session_id = m.group(1);
 			}
 		}
-
+		
+		if (session_id == null) {
+			HttpEntity entity = response.getEntity();
+			ByteArrayOutputStream content = new ByteArrayOutputStream();
+			new BufferedHttpEntity(entity).writeTo(content);
+			
+			// (今現在 euc-jp になっている)
+			String encoding = "UTF-8";
+			if (entity.getContentType().getValue().toLowerCase().indexOf("euc-jp") != -1) {
+				encoding = "euc-jp";
+			}
+			// エラーメッセージを見つける
+			String html = new String(content.toByteArray(), encoding);
+			Pattern p = Pattern.compile(" class=\"error-messages\".*?>(.*?)</");
+			Matcher m = p.matcher(html);
+	
+			if (m.find()) {
+				throw new Exception("Login error(" + m.group(1) +")");
+			}
+				
+			throw new Exception("Login error");
+		}
 	}
 }

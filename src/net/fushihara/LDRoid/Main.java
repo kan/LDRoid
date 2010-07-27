@@ -62,12 +62,20 @@ public class Main extends ListActivity {
 		task.execute(client);
 	}
 	
-	public void setSubs(List<Subscribe> result) {
+	public void setSubs(List<Subscribe> result, Exception error) {
+		
+		if (error != null) {
+			Toast.makeText(this, 
+					"ERROR: " + error.getMessage(), 
+					Toast.LENGTH_LONG).show();
+			return;
+		}
+		
 		if (result == null) {
 			Toast.makeText(this, "no feed", Toast.LENGTH_LONG).show();
 			return;
 		}
-		
+
 		subs = result;
 
 		List<String> items = new ArrayList<String>();
@@ -108,10 +116,24 @@ public class Main extends ListActivity {
             break;
         case MENU_SETTING_ID:
         	Intent intent = new Intent(this, Setting.class);
-        	startActivity(intent);
+        	startActivityForResult(intent, MENU_SETTING_ID);
         	break;
         }
         return ret;
+    }
+    
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    	super.onActivityResult(requestCode, resultCode, data);
+    	
+    	switch (resultCode) {
+    	case MENU_SETTING_ID:
+    		// 設定から帰ってきたら client = null にして、
+    		// 新しく設定されたアカウントが有効になるようにする
+			LDRClientAccount newAccount = getAccount();
+			client = null;
+    		break;
+    	}
     }
 	
     @Override

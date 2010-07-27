@@ -10,6 +10,7 @@ public class GetUnReadFeedsTask extends AsyncTask<String, Void, List<Feed>> {
 	private LDRClient client;
 	private FeedView view;
 	private ProgressDialog progressDialog;
+	private Exception error = null;
 	
 	public GetUnReadFeedsTask(FeedView view, LDRClient client) {
 		this.view   = view;
@@ -28,12 +29,19 @@ public class GetUnReadFeedsTask extends AsyncTask<String, Void, List<Feed>> {
 	
 	@Override
 	protected List<Feed> doInBackground(String... sub_ids) {
-		return client.unRead(sub_ids[0]);
+		try {
+			return client.unRead(sub_ids[0]);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			error = e;
+			return null;
+		}
 	}
 
 	@Override
 	protected void onPostExecute(List<Feed> result) {
 		progressDialog.dismiss();
-		view.setFeeds(result);
+		view.setFeeds(result, error);
 	}
 }

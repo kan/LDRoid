@@ -13,6 +13,7 @@ import android.view.View.OnClickListener;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class FeedView extends Activity implements OnClickListener {
 	private WebView webView;
@@ -67,7 +68,12 @@ public class FeedView extends Activity implements OnClickListener {
         task.execute(subscribe_id);
     }
     
-    public void setFeeds(List<Feed> result) {
+    public void setFeeds(List<Feed> result, Exception e) {
+    	if (e != null) {
+    		Toast.makeText(this, "ERROR: " + e.getMessage(), 
+    				Toast.LENGTH_LONG).show();
+    		return;
+    	}
     	feeds = result;
     	feed_pos = 0;
     	loadData();

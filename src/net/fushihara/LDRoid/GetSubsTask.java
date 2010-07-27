@@ -9,6 +9,7 @@ public class GetSubsTask extends AsyncTask<LDRClient, Void, List<Subscribe>> {
 
 	private Main   view;
 	private ProgressDialog progressDialog;
+	private Exception error = null;
 
 	public GetSubsTask(Main v) {
 		view   = v;
@@ -26,12 +27,20 @@ public class GetSubsTask extends AsyncTask<LDRClient, Void, List<Subscribe>> {
 	
 	@Override
 	protected List<Subscribe> doInBackground(LDRClient... clients) {
-		return clients[0].subs(1);
+		try {
+			return clients[0].subs(1);
+		}
+		catch (Exception e) {
+			e.printStackTrace();
+			error = e;
+			return null;
+		}
 	}
+
 	
 	@Override
 	protected void onPostExecute(List<Subscribe> result) {
 		progressDialog.dismiss();
-		view.setSubs(result);
+		view.setSubs(result, error);
 	}
 }

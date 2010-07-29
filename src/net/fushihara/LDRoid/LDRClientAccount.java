@@ -3,6 +3,7 @@ package net.fushihara.LDRoid;
 import java.io.Serializable;
 
 public class LDRClientAccount implements Serializable {
+	private static final long serialVersionUID = -8210901439557554790L;
 	private String login_id;
 	private String password;
 

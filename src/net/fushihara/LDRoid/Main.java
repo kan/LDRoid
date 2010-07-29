@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -17,6 +18,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 
 public class Main extends ListActivity {
+	private static final String TAG = "Main";
     public static final String KEY_LOGIN_ID = "login_id";
     public static final String KEY_PASSWORD = "password";
     public static final String KEY_SUBS_ID  = "subs_id";
@@ -42,14 +44,15 @@ public class Main extends ListActivity {
     public void onResume() {
     	super.onResume();
     	
-    	loadSubs();
+    	//loadSubs();
     }
 
 	private void loadSubs() {
+		Log.d(TAG, "loadSubs");
 		if ( client == null ) {
 		    LDRClientAccount account = getAccount();
 
-			if (account.isEmpty()) {
+		    if (account.isEmpty()) {
 				// ID/PW未設定
  	        	Intent intent = new Intent(this, Setting.class);
 	        	startActivity(intent);
@@ -90,9 +93,10 @@ public class Main extends ListActivity {
 
 	private LDRClientAccount getAccount() {
 		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
-		LDRClientAccount account = new LDRClientAccount();
-		account.login_id = pref.getString("login_id", null);
-		account.password = pref.getString("password", null);
+		LDRClientAccount account = new LDRClientAccount(
+				pref.getString("login_id", null),
+				pref.getString("password", null)
+			);
 		return account;
 	}
 
@@ -126,12 +130,19 @@ public class Main extends ListActivity {
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     	super.onActivityResult(requestCode, resultCode, data);
     	
-    	switch (resultCode) {
+    	Log.d(TAG, "onActivityResult");
+    	switch (requestCode) {
     	case MENU_SETTING_ID:
-    		// 設定から帰ってきたら client = null にして、
-    		// 新しく設定されたアカウントが有効になるようにする
-			LDRClientAccount newAccount = getAccount();
-			client = null;
+    		// 設定画面から帰ってきたらアカウントが変更されていないか確認する
+    		if (client != null) {
+        		// アカウントが変更されていたら、新しいアカウントで再取得する
+    			LDRClientAccount newAccount = getAccount();
+    			if (!newAccount.equals(client.getAccount())) {
+    				client = null;
+    				loadSubs();
+    			}
+    		}
+			
     		break;
     	}
     }
@@ -142,8 +153,7 @@ public class Main extends ListActivity {
         Intent i = new Intent(this, FeedView.class);
         Subscribe sub = subs.get(position);
         LDRClientAccount account = getAccount();
-		i.putExtra(KEY_LOGIN_ID, account.login_id);
-        i.putExtra(KEY_PASSWORD, account.password);
+		i.putExtra(KEY_LOGIN_ID, account);
         i.putExtra(KEY_SUBS_ID, sub.subscribe_id);
         i.putExtra(KEY_SUBS_TITLE, sub.title);
         startActivity(i);

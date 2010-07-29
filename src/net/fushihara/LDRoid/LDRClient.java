@@ -5,7 +5,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -15,7 +14,6 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.BufferedHttpEntity;
@@ -25,8 +23,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import android.util.Log;
+
 
 public class LDRClient extends DefaultHttpClient {
+	private static final String TAG = "LDRClient";
 	public class Subscribe extends Object {
 		public List<String> tags = new ArrayList<String>();
 		public String folder;
@@ -74,14 +75,17 @@ public class LDRClient extends DefaultHttpClient {
 	private static String auth_url = "https://member.livedoor.com/login/";
 	private static String domain = "http://reader.livedoor.com/";
 	
-	private LDRClientAccount account = new LDRClientAccount();
+	private LDRClientAccount account;
 	private String session_id = null;
 
 	public LDRClient(LDRClientAccount account) {
 		super();
 		
-		this.account.login_id = account.login_id;
-		this.account.password = account.password;
+		this.account = account;
+	}
+	
+	public LDRClientAccount getAccount() {
+		return account;
 	}
 
 	public List<Subscribe> subs(int unread) throws Exception {
@@ -188,6 +192,7 @@ public class LDRClient extends DefaultHttpClient {
 		if (session_id != null) {
 			return;
 		}
+		Log.d(TAG, "login");
 		
 		HttpPost request = new HttpPost(auth_url);
 		
@@ -195,8 +200,8 @@ public class LDRClient extends DefaultHttpClient {
 		// .next, .svÇ™ñ≥Ç¢Ç∆è„éËÇ≠Ç¢Ç©Ç»Ç¢ñÕól
         List<NameValuePair> params = new ArrayList<NameValuePair>(1);
         
-        params.add(new BasicNameValuePair("livedoor_id", account.login_id));
-        params.add(new BasicNameValuePair("password", account.password));
+        params.add(new BasicNameValuePair("livedoor_id", account.getLoginId()));
+        params.add(new BasicNameValuePair("password", account.getPassword()));
         params.add(new BasicNameValuePair(".next", "http://reader.livedoor.com/reader/"));
         params.add(new BasicNameValuePair(".sv", "reader"));
         

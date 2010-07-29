@@ -58,9 +58,9 @@ public class FeedView extends Activity implements OnClickListener {
                 
         if ( client == null ) {
         	Bundle extra = getIntent().getExtras();
-        	LDRClientAccount account = new LDRClientAccount();
-			account .login_id = extra != null ? extra.getString(Main.KEY_LOGIN_ID) : null;
-        	account.password = extra != null ? extra.getString(Main.KEY_PASSWORD) : null;
+        	LDRClientAccount account;
+			account = extra != null ? 
+					(LDRClientAccount)extra.getSerializable(Main.KEY_LOGIN_ID) : null;
         	client = new LDRClient(account);
         }
         

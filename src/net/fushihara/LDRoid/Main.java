@@ -1,5 +1,10 @@
 package net.fushihara.LDRoid;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,11 +28,13 @@ public class Main extends ListActivity {
     public static final String KEY_PASSWORD = "password";
     public static final String KEY_SUBS_ID  = "subs_id";
     public static final String KEY_SUBS_TITLE = "subs_title";
+    private static final String SUBS_FILE = "subs";
 
 	private static final int MENU_RELOAD_ID  = 0;
 	private static final int MENU_SETTING_ID = 1;
 
 	private List<Subscribe> subs;
+	private boolean isSubsSaved = false;
 
 	private LDRClient client;
 
@@ -37,7 +44,8 @@ public class Main extends ListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-		//loadSubs();
+        // 保存されている subs をセット
+        setSubs(loadSubsFromFile());
     }
     
     @Override
@@ -65,8 +73,7 @@ public class Main extends ListActivity {
 		task.execute(client);
 	}
 	
-	public void setSubs(List<Subscribe> result, Exception error) {
-		
+	public void onGetSubsTaskCompleted(List<Subscribe> result, Exception error) {
 		if (error != null) {
 			Toast.makeText(this, 
 					"ERROR: " + error.getMessage(), 
@@ -76,11 +83,17 @@ public class Main extends ListActivity {
 		
 		if (result == null) {
 			Toast.makeText(this, "no feed", Toast.LENGTH_LONG).show();
-			return;
 		}
 
-		subs = result;
-
+		// 読み込んだ subs をファイルに書き出す
+		saveSubsToFile((ArrayList<Subscribe>)subs);
+		
+		setSubs(result);
+	}
+	
+	private void setSubs(List<Subscribe> newSubs) {
+		
+		subs = newSubs;
 		List<String> items = new ArrayList<String>();
 		for (Subscribe sub: subs) {
 			items.add(sub.title + " (" + sub.unread_count + ")" );
@@ -90,14 +103,71 @@ public class Main extends ListActivity {
 	    // ListActivityにアイテムリストをセットする
 	    setListAdapter(notes);
 	}
-
-	private LDRClientAccount getAccount() {
+		private LDRClientAccount getAccount() {
 		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
 		LDRClientAccount account = new LDRClientAccount(
 				pref.getString("login_id", null),
 				pref.getString("password", null)
 			);
 		return account;
+	}
+	
+	@SuppressWarnings("unchecked")
+	private List<Subscribe> loadSubsFromFile() {
+		FileInputStream fis = null;
+		ObjectInputStream ois = null;
+		ArrayList<Subscribe> result = null;
+		
+		try {
+			fis = openFileInput(SUBS_FILE);
+			ois = new ObjectInputStream(fis);
+			result = (ArrayList<Subscribe>)ois.readObject();
+		} catch (IOException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		Log.d(TAG, "loadSubsFromFile " + (result != null));
+		
+		return result;
+	}
+	
+	private void saveSubsToFile(List<Subscribe> subs) {
+		Log.d(TAG, "saveSubsToFile");
+		isSubsSaved = true;
+		FileOutputStream fos = null;
+		ObjectOutputStream oos = null;
+		try {
+			fos = openFileOutput(SUBS_FILE, MODE_PRIVATE);
+			oos = new ObjectOutputStream(fos);
+			oos.writeObject(subs);
+		} catch (IOException e) {
+			e.printStackTrace();
+		} finally {
+			if (fos != null) {
+				try {
+					fos.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+			if (oos != null) {
+				try {
+					oos.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	@Override
+	protected void onPause() {
+		super.onPause();
+		if (!isSubsSaved) {
+			saveSubsToFile(subs);
+			isSubsSaved = true;
+		}
 	}
 
 	@Override

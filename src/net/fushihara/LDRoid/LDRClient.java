@@ -5,6 +5,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -28,7 +29,8 @@ import android.util.Log;
 
 public class LDRClient extends DefaultHttpClient {
 	private static final String TAG = "LDRClient";
-	public class Subscribe extends Object {
+	public static class Subscribe extends Object implements Serializable {
+		private static final long serialVersionUID = 3249600979937544481L;
 		public List<String> tags = new ArrayList<String>();
 		public String folder;
 		public String subscribe_id;
@@ -38,7 +40,7 @@ public class LDRClient extends DefaultHttpClient {
 		public String link;
 		public int subscribers_count;
 		public int unread_count;
-		
+
 		public Subscribe(JSONObject obj) throws JSONException {
 			folder = obj.getString("folder");
 			subscribe_id = obj.getString("subscribe_id");

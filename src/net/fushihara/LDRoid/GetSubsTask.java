@@ -41,6 +41,6 @@ public class GetSubsTask extends AsyncTask<LDRClient, Void, List<Subscribe>> {
 	@Override
 	protected void onPostExecute(List<Subscribe> result) {
 		progressDialog.dismiss();
-		view.setSubs(result, error);
+		view.onGetSubsTaskCompleted(result, error);
 	}
 }

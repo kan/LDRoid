@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<color
+		name="rate5">#FF4D44</color>
+	<color
+		name="rate4">#FFA544</color>
+	<color
+		name="rate3">#E1B100</color>
+	<color
+		name="rate2">#00E11C</color>
+	<color
+		name="rate1">#44DFFF</color>
+	<color
+		name="rate0">#CDCDCD</color>
+</resources>

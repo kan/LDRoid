@@ -249,6 +249,9 @@ public class Main extends ListActivity {
     		items = subs;
     		inflater = (LayoutInflater)getSystemService(
     				Context.LAYOUT_INFLATER_SERVICE);
+    		if (items == null) {
+    			items = new ArrayList<Subscribe>();
+    		}
     	}
     	
 		@Override

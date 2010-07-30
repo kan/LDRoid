@@ -8,8 +8,10 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 
 import android.content.Context;
+import android.util.Log;
 
 public class ObjToFile {
+	private static final String TAG = "ObjToFile";
 	private Context context;
 	private String prefix;
 	
@@ -27,6 +29,7 @@ public class ObjToFile {
 		FileOutputStream fos = null;
 		ObjectOutputStream oos = null;
 		try {
+			Log.d(TAG, "put " + getFileName(name));
 			fos = context.openFileOutput(getFileName(name), 
 					Context.MODE_PRIVATE);
 			oos = new ObjectOutputStream(fos);
@@ -56,7 +59,6 @@ public class ObjToFile {
 		boolean result = false;
 		
 		try {
-			
 			fis = context.openFileInput(getFileName(name));
 			result = true;
 			
@@ -80,6 +82,7 @@ public class ObjToFile {
 		Object o = null;
 		
 		try {
+			Log.d(TAG, "get "+ getFileName(name));
 			fis = context.openFileInput(getFileName(name));
 			ois = new ObjectInputStream(fis);
 			o = ois.readObject();
@@ -97,6 +100,7 @@ public class ObjToFile {
 		int filenames_length = filenames.length;
 		for (int j=0; j<filenames_length; j++) {
 			if (filenames[j].startsWith(prefix)) {
+				Log.d(TAG, "delete " + filenames[j]);
 				context.deleteFile(filenames[j]);
 			}
 		}

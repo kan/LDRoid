@@ -44,7 +44,7 @@ public class Main extends ListActivity {
 	private static final int MENU_SETTING_ID = 1;
 
 	private List<Subscribe> subs;
-	private boolean isSubsSaved = false;
+	private boolean isSubsSaved = true;
 	private int [] rateColors;
 
 	private LDRClient client;

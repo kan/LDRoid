@@ -36,6 +36,9 @@ public class Main extends ListActivity {
     public static final String KEY_SUBS_ID  = "subs_id";
     public static final String KEY_SUBS_TITLE = "subs_title";
     private static final String SUBS_FILE = "subs";
+    
+    private static final int REQUEST_SETTING = 1;
+    private static final int REQUEST_FEEDVIEW = 2;
 
 	private static final int MENU_RELOAD_ID  = 0;
 	private static final int MENU_SETTING_ID = 1;
@@ -80,8 +83,7 @@ public class Main extends ListActivity {
 
 		    if (account.isEmpty()) {
 				// ID/PW未設定
- 	        	Intent intent = new Intent(this, Setting.class);
-	        	startActivity(intent);
+		    	showSetting();
 	        	return;
 			}
 			client = new LDRClient(account);
@@ -123,6 +125,11 @@ public class Main extends ListActivity {
 		
 		SubsAdapter adapter = new SubsAdapter(subs);
 		setListAdapter(adapter);
+	}
+	
+	private void showSetting() {
+     	Intent intent = new Intent(this, Setting.class);
+     	startActivityForResult(intent, REQUEST_SETTING);
 	}
 	
 	private LDRClientAccount getAccount() {
@@ -184,8 +191,8 @@ public class Main extends ListActivity {
 	}
 	
 	@Override
-	protected void onPause() {
-		super.onPause();
+	protected void onStop() {
+		super.onStop();
 		if (!isSubsSaved) {
 			saveSubsToFile(subs);
 			isSubsSaved = true;
@@ -211,8 +218,7 @@ public class Main extends ListActivity {
             loadSubs();
             break;
         case MENU_SETTING_ID:
-        	Intent intent = new Intent(this, Setting.class);
-        	startActivityForResult(intent, MENU_SETTING_ID);
+        	showSetting();
         	break;
         }
         return ret;
@@ -224,7 +230,7 @@ public class Main extends ListActivity {
     	
     	Log.d(TAG, "onActivityResult");
     	switch (requestCode) {
-    	case MENU_SETTING_ID:
+    	case REQUEST_SETTING:
     		// 設定画面から帰ってきたらアカウントが変更されていないか確認する
     		if (client != null) {
         		// アカウントが変更されていたら、新しいアカウントで再取得する
@@ -234,9 +240,29 @@ public class Main extends ListActivity {
     				loadSubs();
     			}
     		}
-			
+    		break;
+    	case REQUEST_FEEDVIEW:
+    		// FeedView から戻ったとき、既読化されていたら(RESULT_OK)
+    		// subs の unread_count を 0 にする
+    		if (resultCode == RESULT_OK && data != null) {
+    			String subs_id = data.getStringExtra(KEY_SUBS_ID);
+    			if (subs_id != null) {
+    				resetUnreadCount(subs_id);
+    			}
+    		}
     		break;
     	}
+    }
+    
+    private void resetUnreadCount(String subs_id)  {
+    	int subs_size = subs.size();
+		for (int j=0; j<subs_size; j++) {
+			if (subs.get(j).subscribe_id.equals(subs_id)) {
+				subs.get(j).unread_count = 0;
+				getListView().invalidateViews();
+				isSubsSaved = false;
+			}
+		}
     }
 	
     @Override
@@ -248,7 +274,7 @@ public class Main extends ListActivity {
 		i.putExtra(KEY_LOGIN_ID, account);
         i.putExtra(KEY_SUBS_ID, sub.subscribe_id);
         i.putExtra(KEY_SUBS_TITLE, sub.title);
-        startActivity(i);
+        startActivityForResult(i, REQUEST_FEEDVIEW);
     }
     
     private class SubsAdapter extends BaseAdapter {

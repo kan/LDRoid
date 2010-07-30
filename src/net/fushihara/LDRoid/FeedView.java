@@ -105,6 +105,10 @@ public class FeedView extends Activity implements OnClickListener {
 			if ( feed_pos + 1 == feeds.size() ) {
 				TouchFeedTask task = new TouchFeedTask(title, client);
 				task.execute(subscribe_id);
+				
+				Intent intent = new Intent();
+				intent.putExtra(Main.KEY_SUBS_ID, subscribe_id);
+				setResult(RESULT_OK, intent);
 			}
 		}
 		updateButtons();

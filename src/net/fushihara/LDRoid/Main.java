@@ -48,6 +48,7 @@ public class Main extends ListActivity {
 	private int [] rateColors;
 
 	private LDRClient client;
+	private UnReadFeedsCache feeds_cache;
 
 	/** Called when the activity is first created. */
     @Override
@@ -64,6 +65,8 @@ public class Main extends ListActivity {
         		res.getColor(R.color.rate4),
         		res.getColor(R.color.rate5),
         };
+        
+        feeds_cache = UnReadFeedsCache.getInstance(getApplicationContext());
         
         // 保存されている subs をセット
         setSubs(loadSubsFromFile());
@@ -101,9 +104,13 @@ public class Main extends ListActivity {
 			return;
 		}
 		
+		
+		
 		if (result == null) {
 			Toast.makeText(this, "no feed", Toast.LENGTH_LONG).show();
 		}
+		
+		feeds_cache.clear();
 
 		// subs をレート順に
 		Collections.sort(result, new Comparator<Subscribe>() {

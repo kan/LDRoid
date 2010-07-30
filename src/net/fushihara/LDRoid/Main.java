@@ -12,21 +12,15 @@ import java.util.List;
 
 import net.fushihara.LDRoid.LDRClient.Subscribe;
 import android.app.ListActivity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.Resources;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
-import android.widget.BaseAdapter;
 import android.widget.ListView;
-import android.widget.TextView;
 import android.widget.Toast;
 
 public class Main extends ListActivity {
@@ -45,7 +39,6 @@ public class Main extends ListActivity {
 
 	private List<Subscribe> subs;
 	private boolean isSubsSaved = true;
-	private int [] rateColors;
 
 	private LDRClient client;
 	private UnReadFeedsCache feeds_cache;
@@ -56,16 +49,6 @@ public class Main extends ListActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        Resources res = getResources();
-        rateColors = new int [] {
-        		res.getColor(R.color.rate0),
-        		res.getColor(R.color.rate1),
-        		res.getColor(R.color.rate2),
-        		res.getColor(R.color.rate3),
-        		res.getColor(R.color.rate4),
-        		res.getColor(R.color.rate5),
-        };
-        
         feeds_cache = UnReadFeedsCache.getInstance(getApplicationContext());
         
         // •Û‘¶‚³‚ê‚Ä‚¢‚é subs ‚ðƒZƒbƒg
@@ -130,7 +113,7 @@ public class Main extends ListActivity {
 		
 		subs = newSubs;
 		
-		SubsAdapter adapter = new SubsAdapter(subs);
+		SubsAdapter adapter = new SubsAdapter(this, subs);
 		setListAdapter(adapter);
 	}
 	
@@ -293,58 +276,4 @@ public class Main extends ListActivity {
         startActivityForResult(i, REQUEST_FEEDVIEW);
     }
     
-    private class SubsAdapter extends BaseAdapter {
-    	private List<Subscribe> items;
-    	private LayoutInflater inflater;
-    	
-    	public SubsAdapter(List<Subscribe> subs) {
-    		items = subs;
-    		inflater = (LayoutInflater)getSystemService(
-    				Context.LAYOUT_INFLATER_SERVICE);
-    		if (items == null) {
-    			items = new ArrayList<Subscribe>();
-    		}
-    	}
-    	
-		@Override
-		public int getCount() {
-			return items.size();
-		}
-
-		@Override
-		public Object getItem(int position) {
-			return items.get(position);
-		}
-
-		@Override
-		public long getItemId(int position) {
-			return position;
-		}
-
-		@Override
-		public View getView(int position, View convertView, ViewGroup parent) {
-			View view = convertView;
-			if (view == null) {
-				view = inflater.inflate(R.layout.subs_row, null);
-			}
-			Subscribe s = items.get(position);
-			
-			TextView t = (TextView)view.findViewById(R.id.title);
-			t.setText(s.title);
-			
-			t = (TextView)view.findViewById(R.id.count);
-			t.setText(Integer.toString(s.unread_count));
-			
-			t = (TextView)view.findViewById(R.id.ratebar);
-			if (s.rate >= 0 && s.rate <= 5) {
-				t.setBackgroundColor(rateColors[s.rate]);
-			}
-			else {
-				t.setBackgroundColor(rateColors[0]);
-			}
-
-			return view;
-		}
-    
-    }
 }

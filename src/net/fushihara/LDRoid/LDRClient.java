@@ -58,7 +58,8 @@ public class LDRClient extends DefaultHttpClient {
 		}
 	}
 	
-	public class Feed extends Object {
+	public static class Feed extends Object implements Serializable {
+		private static final long serialVersionUID = -7847969794608002809L;
 		public String title;
 		public String author;
 		public String link;

@@ -257,10 +257,19 @@ public class Main extends ListActivity {
     private void resetUnreadCount(String subs_id)  {
     	int subs_size = subs.size();
 		for (int j=0; j<subs_size; j++) {
-			if (subs.get(j).subscribe_id.equals(subs_id)) {
-				subs.get(j).unread_count = 0;
-				getListView().invalidateViews();
-				isSubsSaved = false;
+			Subscribe sub = subs.get(j); 
+			if (sub.subscribe_id.equals(subs_id)) {
+				if (sub.unread_count > 0) {
+					sub.unread_count = 0;
+					getListView().invalidateViews();
+					isSubsSaved = false;
+					// TODO: isSubsSaved が false の場合に
+					// onStop が呼ばれると、フィード一覧がファイルに書き出されるが、
+					// フィードの数が多くなると無駄が大きいので、フィード一覧と
+					// unread_count == 0 かどうかの情報は分けて管理した方が良いかもしれない
+					// (たとえば unread_count == 0 の subscribe_id のリストを保存するとか)
+				}
+				break;
 			}
 		}
     }

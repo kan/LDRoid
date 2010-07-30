@@ -102,7 +102,7 @@ public class Main extends ListActivity {
 		}
 
 		// 読み込んだ subs をファイルに書き出す
-		saveSubsToFile((ArrayList<Subscribe>)subs);
+		saveSubsToFile((ArrayList<Subscribe>)result);
 		
 		setSubs(result);
 	}

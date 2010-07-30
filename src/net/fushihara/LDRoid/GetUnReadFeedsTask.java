@@ -42,6 +42,6 @@ public class GetUnReadFeedsTask extends AsyncTask<String, Void, List<Feed>> {
 	@Override
 	protected void onPostExecute(List<Feed> result) {
 		progressDialog.dismiss();
-		view.setFeeds(result, error);
+		view.onGetUnReadFeedsTaskCompleted(result, error);
 	}
 }

@@ -27,6 +27,7 @@ public class FeedView extends Activity implements OnClickListener {
 	private Button pin_button;
 	private LDRClient client;
 	private TextView title;
+	private UnReadFeedsCache cache;
 
 	/** Called when the activity is first created. */
     @Override
@@ -65,16 +66,29 @@ public class FeedView extends Activity implements OnClickListener {
         	client = new LDRClient(account);
         }
         
-        GetUnReadFeedsTask task = new GetUnReadFeedsTask(this, client);
-        task.execute(subscribe_id);
+        cache = UnReadFeedsCache.getInstance(getApplicationContext());
+        List<Feed> cached_feeds = cache.getFeeds(subscribe_id);
+        if (cached_feeds != null) {
+        	setFeeds(cached_feeds);
+        }
+        else {
+	        GetUnReadFeedsTask task = new GetUnReadFeedsTask(this, client);
+	        task.execute(subscribe_id);
+        }
     }
     
-    public void setFeeds(List<Feed> result, Exception e) {
+    public void onGetUnReadFeedsTaskCompleted(List<Feed> result, Exception e) {
     	if (e != null) {
     		Toast.makeText(this, "ERROR: " + e.getMessage(), 
     				Toast.LENGTH_LONG).show();
-    		return;
     	}
+    	else {
+    		cache.putFeeds(subscribe_id, result);
+    	}
+    	setFeeds(result);
+    }
+    
+    public void setFeeds(List<Feed> result) {
     	feeds = result;
     	feed_pos = 0;
     	

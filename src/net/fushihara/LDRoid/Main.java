@@ -6,6 +6,8 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 
 import net.fushihara.LDRoid.LDRClient.Subscribe;
@@ -101,6 +103,14 @@ public class Main extends ListActivity {
 			Toast.makeText(this, "no feed", Toast.LENGTH_LONG).show();
 		}
 
+		// subs をレート順に
+		Collections.sort(result, new Comparator<Subscribe>() {
+			@Override
+			public int compare(Subscribe object1, Subscribe object2) {
+				return object2.rate - object1.rate;
+			}
+		});
+		
 		// 読み込んだ subs をファイルに書き出す
 		saveSubsToFile((ArrayList<Subscribe>)result);
 		

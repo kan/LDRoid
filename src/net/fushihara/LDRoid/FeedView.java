@@ -54,6 +54,7 @@ public class FeedView extends Activity implements OnClickListener {
         	Bundle extra = getIntent().getExtras();
         	subscribe_id = extra != null ? extra.getString(Main.KEY_SUBS_ID) : null;
         	subscribe_title = extra != null ? extra.getString(Main.KEY_SUBS_TITLE) : null;
+        	title.setText(subscribe_title);
         }
                 
         if ( client == null ) {
@@ -76,18 +77,37 @@ public class FeedView extends Activity implements OnClickListener {
     	}
     	feeds = result;
     	feed_pos = 0;
+    	
     	loadData();
+    }
+    
+    private void updateButtons() {
+    	if (feeds == null || feeds.size() == 0) {
+    		prev_button.setEnabled(false);
+    		next_button.setEnabled(false);
+    	}
+    	else {
+    		prev_button.setEnabled(feed_pos > 0);
+    		next_button.setEnabled(feed_pos < feeds.size()-1);
+    	}
+    	boolean isSelected = (currentFeed() != null); 
+		pin_button.setEnabled(isSelected);
+		open_button.setEnabled(isSelected);
     }
 
 	private void loadData() {
-		String body_html = "<h2>" + currentFeed().title + "</h2>\n" + currentFeed().body;
-		webView.loadDataWithBaseURL(currentFeed().link, body_html, "text/html", "utf-8","null");
-		title.setText("("+String.valueOf(feed_pos+1)+"/"+feeds.size()+")"+subscribe_title);
-		
-		if ( feed_pos + 1 == feeds.size() ) {
-			TouchFeedTask task = new TouchFeedTask(title, client);
-			task.execute(subscribe_id);
+		Feed feed = currentFeed();
+		if (feed != null) {
+			String body_html = "<h2>" + feed.title + "</h2>\n" + feed.body;
+			webView.loadDataWithBaseURL(feed.link, body_html, "text/html", "utf-8","null");
+			title.setText("("+String.valueOf(feed_pos+1)+"/"+feeds.size()+")"+subscribe_title);
+			
+			if ( feed_pos + 1 == feeds.size() ) {
+				TouchFeedTask task = new TouchFeedTask(title, client);
+				task.execute(subscribe_id);
+			}
 		}
+		updateButtons();
 	}
 
 	@Override
@@ -105,16 +125,22 @@ public class FeedView extends Activity implements OnClickListener {
 			}
 		}
 		if ( v == open_button ) {
-			Intent intent = new Intent(Intent.ACTION_VIEW,Uri.parse(currentFeed().link));
-			startActivity(intent);
+			if (currentFeed() != null) {
+				Intent intent = new Intent(Intent.ACTION_VIEW,Uri.parse(currentFeed().link));
+				startActivity(intent);
+			}
 		}
 		if ( v == pin_button ) {
-			SetPinTask task = new SetPinTask(this, client);
-			task.execute(currentFeed());
+			if (currentFeed() != null) {
+				SetPinTask task = new SetPinTask(this, client);
+				task.execute(currentFeed());
+			}
 		}
 	}
 
 	private Feed currentFeed() {
+		if (feeds == null || feeds.size()==0) return null;
 		return feeds.get(feed_pos);
 	}
+	
 }

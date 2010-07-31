@@ -75,6 +75,11 @@ public class LDRClient extends DefaultHttpClient {
 		}
 	}
 	
+	public static class Feeds extends ArrayList<Feed> {
+		private static final long serialVersionUID = -6411496025853141474L;
+		long last_stored_on;
+	}
+	
 	private static String auth_url = "https://member.livedoor.com/login/";
 	private static String domain = "http://reader.livedoor.com/";
 	
@@ -114,7 +119,7 @@ public class LDRClient extends DefaultHttpClient {
 		return items;
 	}
 	
-	public List<Feed> unRead(String subscribe_id) throws Exception {
+	public Feeds unRead(String subscribe_id) throws Exception {
 
 		login();
 
@@ -129,11 +134,12 @@ public class LDRClient extends DefaultHttpClient {
 
         JSONObject jsonroot = new JSONObject(getContent(response));
         JSONArray json = jsonroot.getJSONArray("items");
-		List<Feed> items = new ArrayList<Feed>();
+		Feeds items = new Feeds();
 		for (int i = 0; i < json.length(); i++) {
 		    JSONObject obj = json.getJSONObject(i);
 		    items.add(new Feed(obj));
 		}
+		items.last_stored_on = jsonroot.getLong("last_stored_on");
 		
 		return items;
 	}
@@ -146,6 +152,21 @@ public class LDRClient extends DefaultHttpClient {
         List<NameValuePair> params = new ArrayList<NameValuePair>(1);
         
         params.add(new BasicNameValuePair("subscribe_id", subscribe_id));
+        params.add(new BasicNameValuePair("ApiKey", session_id));
+
+		req.setEntity(new UrlEncodedFormEntity(params));
+        execute(req);
+	}
+	
+	public void touch(String subscribe_id, long timestamp) throws Exception {
+
+		login();
+
+		HttpPost req = new HttpPost(domain + "/api/touch_all");
+        List<NameValuePair> params = new ArrayList<NameValuePair>(1);
+        
+        params.add(new BasicNameValuePair("subscribe_id", subscribe_id));
+        params.add(new BasicNameValuePair("timestamp", Long.toString(timestamp)));
         params.add(new BasicNameValuePair("ApiKey", session_id));
 
 		req.setEntity(new UrlEncodedFormEntity(params));

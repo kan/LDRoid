@@ -9,16 +9,18 @@ public class TouchFeedTask extends AsyncTask<String, Void, Void> {
 	private LDRClient client;
 	private TextView title;
 	private Exception error = null;
+	private long timestamp;
 	
-	public TouchFeedTask(TextView title, LDRClient client) {
+	public TouchFeedTask(TextView title, LDRClient client, long timestamp) {
 		this.client = client;
 		this.title  = title;
+		this.timestamp = timestamp;
 	}
 	
 	@Override
 	protected Void doInBackground(String... sub_ids) {
 		try {	
-			client.touchAll(sub_ids[0]);
+			client.touch(sub_ids[0], timestamp);
 		}
 		catch (Exception e) {
 			e.printStackTrace();

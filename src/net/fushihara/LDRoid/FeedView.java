@@ -116,7 +116,7 @@ public class FeedView extends Activity implements OnClickListener {
 			title.setText("("+String.valueOf(feed_pos+1)+"/"+feeds.size()+")"+subscribe_title);
 			
 			if ( feed_pos + 1 == feeds.size() ) {
-				TouchFeedTask task = new TouchFeedTask(title, client);
+				TouchFeedTask task = new TouchFeedTask(title, client, feeds.last_stored_on);
 				task.execute(subscribe_id);
 				
 				Intent intent = new Intent();

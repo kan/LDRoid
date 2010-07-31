@@ -139,7 +139,12 @@ public class LDRClient extends DefaultHttpClient {
 		    JSONObject obj = json.getJSONObject(i);
 		    items.add(new Feed(obj));
 		}
-		items.last_stored_on = jsonroot.getLong("last_stored_on");
+
+		items.last_stored_on = 0;
+		if (jsonroot.has("last_stored_on")) {
+			// items ‚ª‹ó‚Ìê‡‚Í last_stored_on ‚ª–³‚¢
+			items.last_stored_on = jsonroot.getLong("last_stored_on");
+		}
 		
 		return items;
 	}

@@ -6,6 +6,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.util.ArrayList;
 
 import android.content.Context;
 import android.util.Log;
@@ -104,5 +105,20 @@ public class ObjToFile {
 				context.deleteFile(filenames[j]);
 			}
 		}
+	}
+	
+	// ‚·‚×‚Ä‚Ìƒtƒ@ƒCƒ‹–¼‚ðŽæ“¾
+	public ArrayList<String> getList() {
+		ArrayList<String> result = new ArrayList<String>();
+		
+		String filenames [] = context.fileList();
+		int filenames_length = filenames.length;
+		int prefix_length = prefix.length();
+		for (int j=0; j<filenames_length; j++) {
+			if (filenames[j].startsWith(prefix)) {
+				result.add(filenames[j].substring(prefix_length));
+			}
+		}
+		return result;
 	}
 }

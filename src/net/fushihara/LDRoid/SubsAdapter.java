@@ -1,6 +1,7 @@
 package net.fushihara.LDRoid;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 import net.fushihara.LDRoid.LDRClient.Subscribe;
@@ -16,13 +17,21 @@ class SubsAdapter extends BaseAdapter {
 	
 	@SuppressWarnings("unused")
 	private static final String TAG = "SubsAdapter";
+	
+	public static final byte FLAG_PREFETCHED = 0x01;
 
 	private static int [] rateColors;
+	
 	private List<Subscribe> items;
+	private HashMap<String,Byte> itemsFlag;
 	private LayoutInflater inflater;
+	private Context context;
 	
 	public SubsAdapter(Context context, List<Subscribe> subs) {
+		this.context = context;
 		items = subs;
+		itemsFlag = new HashMap<String,Byte>();
+		
 		inflater = (LayoutInflater)context.getSystemService(
 				Context.LAYOUT_INFLATER_SERVICE);
 		if (items == null) {
@@ -40,6 +49,18 @@ class SubsAdapter extends BaseAdapter {
 	        		res.getColor(R.color.rate5),
 	        };
 		}
+	}
+	
+	public void setFlag(String subscribe_id, byte flag) {
+		itemsFlag.put(subscribe_id, flag);
+	}
+	
+	public byte getFlag(String subscribe_id) {
+		Byte b = itemsFlag.get(subscribe_id);
+		if (b == null) {
+			return 0;
+		}
+		return b;
 	}
 	
 	@Override
@@ -64,9 +85,19 @@ class SubsAdapter extends BaseAdapter {
 			view = inflater.inflate(R.layout.subs_row, null);
 		}
 		Subscribe s = items.get(position);
+		byte flag = getFlag(s.subscribe_id);
 		
 		TextView t = (TextView)view.findViewById(R.id.title);
 		t.setText(s.title);
+		if (s.unread_count == 0) {
+			t.setTextAppearance(context, R.style.subs_title_empty);
+		}
+		else if ((flag & FLAG_PREFETCHED) != 0) {
+			t.setTextAppearance(context, R.style.subs_title_prefetched);
+		}
+		else {
+			t.setTextAppearance(context, R.style.subs_title);
+		}
 		
 		t = (TextView)view.findViewById(R.id.count);
 		t.setText(Integer.toString(s.unread_count));
@@ -78,7 +109,7 @@ class SubsAdapter extends BaseAdapter {
 		else {
 			t.setBackgroundColor(rateColors[0]);
 		}
-
+		
 		return view;
 	}
 

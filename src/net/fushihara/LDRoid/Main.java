@@ -23,7 +23,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
-import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
 
@@ -124,6 +123,13 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 		SubsAdapter adapter = new SubsAdapter(this, subs);
 		setListAdapter(adapter);
 		
+		// キャッシュ済みかどうかのフラグを設定
+		ArrayList<String> cachedList = feeds_cache.getList();
+		int cachedList_size = cachedList.size();
+		for (int j=0; j<cachedList_size; j++) {
+			adapter.setFlag(cachedList.get(j), SubsAdapter.FLAG_PREFETCHED);
+		}
+		
 		prefetch_start_position = 0;
         prefetch();
 	}
@@ -149,7 +155,7 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 		}
 		
 		int position = prefetch_start_position;
-		ListAdapter adapter = getListAdapter();
+		SubsAdapter adapter = (SubsAdapter)getListAdapter();
 		// フィードが空か、リストの範囲外が指定されたときは先読みしない
 		if (position < 0 || position >= adapter.getCount()) {
 			return;
@@ -194,6 +200,9 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 			// パフォーマンスが良いと思うが、FeedView で書き込みが
 			// 同時に発生する可能性があるのでメインスレッドで実行
 			feeds_cache.put(subscribe_id, feeds);
+			SubsAdapter adapter = (SubsAdapter)getListAdapter();
+			adapter.setFlag(subscribe_id, SubsAdapter.FLAG_PREFETCHED);
+			getListView().invalidateViews();
 			
 			// 次の先読みを開始
 			prefetch();

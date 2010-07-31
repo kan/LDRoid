@@ -171,7 +171,9 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 				prefetch_task.execute(sub.subscribe_id);
 				break;
 			}
-			position++;
+			if (++position >= adapter.getCount()) {
+				break;
+			}
 		}
 	}
 	

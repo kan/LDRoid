@@ -2,10 +2,11 @@ package net.fushihara.LDRoid;
 
 import java.util.List;
 import net.fushihara.LDRoid.LDRClient.Feed;
+import net.fushihara.LDRoid.LDRClient.Feeds;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;
 
-public class GetUnReadFeedsTask extends AsyncTask<String, Void, List<Feed>> {
+public class GetUnReadFeedsTask extends AsyncTask<String, Void, Feeds> {
 
 	private LDRClient client;
 	private FeedView view;
@@ -28,7 +29,7 @@ public class GetUnReadFeedsTask extends AsyncTask<String, Void, List<Feed>> {
 	}
 	
 	@Override
-	protected List<Feed> doInBackground(String... sub_ids) {
+	protected Feeds doInBackground(String... sub_ids) {
 		try {
 			return client.unRead(sub_ids[0]);
 		}
@@ -40,7 +41,7 @@ public class GetUnReadFeedsTask extends AsyncTask<String, Void, List<Feed>> {
 	}
 
 	@Override
-	protected void onPostExecute(List<Feed> result) {
+	protected void onPostExecute(Feeds result) {
 		progressDialog.dismiss();
 		view.onGetUnReadFeedsTaskCompleted(result, error);
 	}

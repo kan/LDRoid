@@ -1,10 +1,6 @@
 package net.fushihara.LDRoid;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import net.fushihara.LDRoid.LDRClient.Feed;
-
+import net.fushihara.LDRoid.LDRClient.Feeds;
 import android.content.Context;
 
 public class UnReadFeedsCache extends ObjToFile {
@@ -22,11 +18,10 @@ public class UnReadFeedsCache extends ObjToFile {
 		super(context, prefix);
 	}
 	
-	@SuppressWarnings("unchecked")
-	public List<Feed> getFeeds(String subscribe_id) {
-		ArrayList<Feed> feeds = null;
+	public Feeds getFeeds(String subscribe_id) {
+		Feeds feeds = null;
 		try {
-			feeds = (ArrayList<Feed>)get(subscribe_id);
+			feeds = (Feeds)get(subscribe_id);
 		}
 		catch (Exception e) {
 			e.printStackTrace();
@@ -34,7 +29,7 @@ public class UnReadFeedsCache extends ObjToFile {
 		return feeds;
 	}
 	
-	public void putFeeds(String subscribe_id, List<Feed> feeds) {
+	public void putFeeds(String subscribe_id, Feeds feeds) {
 		put(subscribe_id, feeds);
 	}
 }

@@ -1,8 +1,7 @@
 package net.fushihara.LDRoid;
 
-import java.util.List;
-
 import net.fushihara.LDRoid.LDRClient.Feed;
+import net.fushihara.LDRoid.LDRClient.Feeds;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
@@ -22,7 +21,7 @@ public class FeedView extends Activity implements OnClickListener {
 	private Button open_button;
 	private String subscribe_title;
 	private String subscribe_id;
-	private List<Feed> feeds;
+	private Feeds feeds;
 	private int feed_pos;
 	private Button pin_button;
 	private LDRClient client;
@@ -67,7 +66,7 @@ public class FeedView extends Activity implements OnClickListener {
         }
         
         cache = UnReadFeedsCache.getInstance(getApplicationContext());
-        List<Feed> cached_feeds = cache.getFeeds(subscribe_id);
+        Feeds cached_feeds = cache.getFeeds(subscribe_id);
         if (cached_feeds != null) {
         	setFeeds(cached_feeds);
         }
@@ -77,7 +76,7 @@ public class FeedView extends Activity implements OnClickListener {
         }
     }
     
-    public void onGetUnReadFeedsTaskCompleted(List<Feed> result, Exception e) {
+    public void onGetUnReadFeedsTaskCompleted(Feeds result, Exception e) {
     	if (e != null) {
     		Toast.makeText(this, "ERROR: " + e.getMessage(), 
     				Toast.LENGTH_LONG).show();
@@ -88,7 +87,7 @@ public class FeedView extends Activity implements OnClickListener {
     	setFeeds(result);
     }
     
-    public void setFeeds(List<Feed> result) {
+    public void setFeeds(Feeds result) {
     	feeds = result;
     	feed_pos = 0;
     	

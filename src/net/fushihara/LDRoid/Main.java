@@ -22,6 +22,7 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
@@ -53,6 +54,7 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.main);
 
         feeds_cache = UnReadFeedsCache.getInstance(getApplicationContext());
@@ -168,6 +170,7 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 				// キャッシュが作成されていないものを見つけたらタスクを起動
 				Log.d(TAG, "prefetch " + position);
 				prefetch_task = new PrefetchUnReadFeedsTask(client, this);
+				setProgressBarIndeterminateVisibility(true);
 				prefetch_task.execute(sub.subscribe_id);
 				break;
 			}
@@ -182,6 +185,7 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 	public void onPrefetchUnReadFeedsTaskComplete(Object sender, 
 			String subscribe_id, Feeds feeds, Exception e) {
 
+		setProgressBarIndeterminateVisibility(false);
 		// エラーが無ければ保存する
 		prefetch_task = null;
 		

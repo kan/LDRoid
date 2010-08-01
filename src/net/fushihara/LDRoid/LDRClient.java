@@ -1,10 +1,7 @@
 package net.fushihara.LDRoid;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -210,18 +207,10 @@ public class LDRClient {
 	// HttpResponse‚Ìbody‚ðŽæ“¾
 	private String getContent(HttpResponse response) {
 		try {
-			InputStream in = response.getEntity().getContent();
-			
-			InputStreamReader isr = new InputStreamReader(in);
-	    	BufferedReader buf = new BufferedReader(isr);
-	        StringBuilder strb = new StringBuilder();
+			ByteArrayOutputStream baos = new ByteArrayOutputStream(10*1024);
+			response.getEntity().writeTo(baos);
 	        
-	        String sline;
-			while ( (sline = buf.readLine()) != null ) {
-				strb.append(sline + "\n");
-			}
-	        
-	        return strb.toString();
+	        return baos.toString("UTF-8");
 		} catch (IllegalStateException e) {
 			e.printStackTrace();
 		} catch (IOException e) {

@@ -10,26 +10,28 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import net.fushihara.LDRoid.LDRClient.Feeds;
 import net.fushihara.LDRoid.LDRClient.Subscribe;
+import net.fushihara.LDRoid.PrefetchUnReadFeedsTask.OnPrefetchUnReadFeedsListener;
 import android.app.ListActivity;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.ListView;
 import android.widget.Toast;
 
-public class Main extends ListActivity {
+public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener {
 	private static final String TAG = "Main";
     public static final String KEY_LOGIN_ID = "login_id";
     public static final String KEY_PASSWORD = "password";
     public static final String KEY_SUBS_ID  = "subs_id";
     public static final String KEY_SUBS_TITLE = "subs_title";
     private static final String SUBS_FILE = "subs";
+    private static final int PREFETCH_COUNT = 5;
     
     private static final int REQUEST_SETTING = 1;
     private static final int REQUEST_FEEDVIEW = 2;
@@ -39,14 +41,16 @@ public class Main extends ListActivity {
 
 	private List<Subscribe> subs;
 	private boolean isSubsSaved = true;
+	private PrefetchUnReadFeedsTask prefetch_task;
+	private int prefetch_start_position;
 
-	private LDRClient client;
 	private UnReadFeedsCache feeds_cache;
 
 	/** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         setContentView(R.layout.main);
 
         feeds_cache = UnReadFeedsCache.getInstance(getApplicationContext());
@@ -61,22 +65,24 @@ public class Main extends ListActivity {
     	
     	//loadSubs();
     }
-
+    
 	private void loadSubs() {
 		Log.d(TAG, "loadSubs");
-		if ( client == null ) {
-		    LDRClientAccount account = getAccount();
 
-		    if (account.isEmpty()) {
-				// ID/PW未設定
-		    	showSetting();
-	        	return;
-			}
-			client = new LDRClient(account);
+		LDRClient client = getClient();
+		if ( client == null ) {
+			// ID/PW未設定
+	    	showSetting();
+        	return;
 		}
 
 		GetSubsTask task = new GetSubsTask(this);
 		task.execute(client);
+	}
+	
+	private LDRClient getClient() {
+		LDRoidApplication app = (LDRoidApplication)getApplication(); 
+		return app.getClient();
 	}
 	
 	public void onGetSubsTaskCompleted(List<Subscribe> result, Exception error) {
@@ -115,6 +121,16 @@ public class Main extends ListActivity {
 		
 		SubsAdapter adapter = new SubsAdapter(this, subs);
 		setListAdapter(adapter);
+		
+		// キャッシュ済みかどうかのフラグを設定
+		ArrayList<String> cachedList = feeds_cache.getList();
+		int cachedList_size = cachedList.size();
+		for (int j=0; j<cachedList_size; j++) {
+			adapter.setFlag(cachedList.get(j), SubsAdapter.FLAG_PREFETCHED);
+		}
+		
+		prefetch_start_position = 0;
+        prefetch();
 	}
 	
 	private void showSetting() {
@@ -122,14 +138,65 @@ public class Main extends ListActivity {
      	startActivityForResult(intent, REQUEST_SETTING);
 	}
 	
-	private LDRClientAccount getAccount() {
-		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
-		LDRClientAccount account = new LDRClientAccount(
-				pref.getString("login_id", null),
-				pref.getString("password", null)
-			);
-		return account;
+	// フィードの先読み
+	private void prefetch() {
+		if (prefetch_task != null) {
+			return;
+		}
+		
+		int position = prefetch_start_position;
+		SubsAdapter adapter = (SubsAdapter)getListAdapter();
+		// フィードが空か、リストの範囲外が指定されたときは先読みしない
+		if (position < 0 || position >= adapter.getCount()) {
+			return;
+		}
+
+		LDRClient client = getClient();
+		if (client == null) {
+			return;
+		}
+		
+		// 先読み開始位置から PREFETCH_COUNT 分のフィードの
+		// キャッシュの存在を確認して、キャッシュがなければタスクを起動
+		for (int j=0; j<PREFETCH_COUNT; j++) {
+			Subscribe sub = (Subscribe) adapter.getItem(position);
+			if (!feeds_cache.isExists(sub.subscribe_id)) {
+				// キャッシュが作成されていないものを見つけたらタスクを起動
+				Log.d(TAG, "prefetch " + position);
+				prefetch_task = new PrefetchUnReadFeedsTask(client, this);
+				setProgressBarIndeterminateVisibility(true);
+				prefetch_task.execute(sub.subscribe_id);
+				break;
+			}
+			if (++position >= adapter.getCount()) {
+				break;
+			}
+		}
 	}
+	
+	// フィードの先読み完了
+	@Override
+	public void onPrefetchUnReadFeedsTaskComplete(Object sender, 
+			String subscribe_id, Feeds feeds, Exception e) {
+
+		setProgressBarIndeterminateVisibility(false);
+		// エラーが無ければ保存する
+		prefetch_task = null;
+		
+		if (e == null) {
+			// TODO: ファイルの書き出しまでAsyncTaskでやったほうが
+			// パフォーマンスが良いと思うが、FeedView で書き込みが
+			// 同時に発生する可能性があるのでメインスレッドで実行
+			feeds_cache.put(subscribe_id, feeds);
+			SubsAdapter adapter = (SubsAdapter)getListAdapter();
+			adapter.setFlag(subscribe_id, SubsAdapter.FLAG_PREFETCHED);
+			getListView().invalidateViews();
+			
+			// 次の先読みを開始
+			prefetch();
+		}
+	}
+	
 	
 	@SuppressWarnings("unchecked")
 	private List<Subscribe> loadSubsFromFile() {
@@ -222,22 +289,31 @@ public class Main extends ListActivity {
     	switch (requestCode) {
     	case REQUEST_SETTING:
     		// 設定画面から帰ってきたらアカウントが変更されていないか確認する
-    		if (client != null) {
+    		LDRoidApplication app = (LDRoidApplication)getApplication();
+    		LDRClient client = app.getClient();
+    		if (!client.getAccount().equals(app.getAccount())) {
         		// アカウントが変更されていたら、新しいアカウントで再取得する
-    			LDRClientAccount newAccount = getAccount();
-    			if (!newAccount.equals(client.getAccount())) {
-    				client = null;
-    				loadSubs();
-    			}
+    			// TODO:
+    			app.clearClient();
+				loadSubs();
     		}
     		break;
     	case REQUEST_FEEDVIEW:
     		// FeedView から戻ったとき、既読化されていたら(RESULT_OK)
     		// subs の unread_count を 0 にする
-    		if (resultCode == RESULT_OK && data != null) {
+    		if (data != null) {
     			String subs_id = data.getStringExtra(KEY_SUBS_ID);
     			if (subs_id != null) {
-    				resetUnreadCount(subs_id);
+        			if (resultCode == RESULT_OK) {
+        				resetUnreadCount(subs_id);
+        			}
+
+        			// FeedViewでキャッシュが作成されたか確認
+    				if (feeds_cache.isExists(subs_id)) {
+	    		        SubsAdapter adapter = (SubsAdapter)getListAdapter();
+	    		        adapter.setFlag(subs_id, SubsAdapter.FLAG_PREFETCHED);
+	    		        getListView().invalidateViews();
+    				}
     			}
     		}
     		break;
@@ -267,13 +343,20 @@ public class Main extends ListActivity {
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
         super.onListItemClick(l, v, position, id);
+        
+        // TODO: もしも prefetch_task で取得中のフィードが
+        // クリックされた場合は、prefetch_task の終了を待たないと二重に読み込みが
+        // 発生してしまうので少し無駄に待たされる
+        
         Intent i = new Intent(this, FeedView.class);
         Subscribe sub = subs.get(position);
-        LDRClientAccount account = getAccount();
-		i.putExtra(KEY_LOGIN_ID, account);
         i.putExtra(KEY_SUBS_ID, sub.subscribe_id);
         i.putExtra(KEY_SUBS_TITLE, sub.title);
         startActivityForResult(i, REQUEST_FEEDVIEW);
+
+        prefetch_start_position = position + 1;
+        prefetch();
     }
+
     
 }

@@ -1,10 +1,7 @@
 package net.fushihara.LDRoid;
 
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,6 +12,8 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.BufferedHttpEntity;
@@ -27,7 +26,7 @@ import org.json.JSONObject;
 import android.util.Log;
 
 
-public class LDRClient extends DefaultHttpClient {
+public class LDRClient {
 	private static final String TAG = "LDRClient";
 	public static class Subscribe extends Object implements Serializable {
 		private static final long serialVersionUID = 3249600979937544481L;
@@ -82,6 +81,7 @@ public class LDRClient extends DefaultHttpClient {
 	
 	private static String auth_url = "https://member.livedoor.com/login/";
 	private static String domain = "http://reader.livedoor.com/";
+	private CookieStore cookie_store;
 	
 	private LDRClientAccount account;
 	private String session_id = null;
@@ -95,7 +95,13 @@ public class LDRClient extends DefaultHttpClient {
 	public LDRClientAccount getAccount() {
 		return account;
 	}
-
+	
+	private HttpClient createDefaultClient() {
+		DefaultHttpClient client = new DefaultHttpClient();
+		client.setCookieStore(cookie_store);
+		return client;
+	}
+	
 	public List<Subscribe> subs(int unread) throws Exception {
 		login();
 		
@@ -106,8 +112,9 @@ public class LDRClient extends DefaultHttpClient {
         params.add(new BasicNameValuePair("unread", String.valueOf(unread)));
         params.add(new BasicNameValuePair("ApiKey", session_id));
 
-		req.setEntity(new UrlEncodedFormEntity(params));
-        HttpResponse response = execute(req);
+        req.setEntity(new UrlEncodedFormEntity(params));
+		HttpClient client = createDefaultClient();
+        HttpResponse response = client.execute(req);
 		
 		JSONArray json = new JSONArray(getContent(response));
 		List<Subscribe> items = new ArrayList<Subscribe>();
@@ -115,7 +122,7 @@ public class LDRClient extends DefaultHttpClient {
 		    JSONObject obj = json.getJSONObject(i);
 		    items.add(new Subscribe(obj));
 		}
-			
+		
 		return items;
 	}
 	
@@ -130,7 +137,8 @@ public class LDRClient extends DefaultHttpClient {
         params.add(new BasicNameValuePair("ApiKey", session_id));
 
 		req.setEntity(new UrlEncodedFormEntity(params));
-        HttpResponse response = execute(req);
+		HttpClient client = createDefaultClient();
+        HttpResponse response = client.execute(req);
 
         JSONObject jsonroot = new JSONObject(getContent(response));
         JSONArray json = jsonroot.getJSONArray("items");
@@ -139,13 +147,18 @@ public class LDRClient extends DefaultHttpClient {
 		    JSONObject obj = json.getJSONObject(i);
 		    items.add(new Feed(obj));
 		}
-		items.last_stored_on = jsonroot.getLong("last_stored_on");
+
+		items.last_stored_on = 0;
+		if (jsonroot.has("last_stored_on")) {
+			// items が空の場合は last_stored_on が無い
+			items.last_stored_on = jsonroot.getLong("last_stored_on");
+		}
 		
 		return items;
 	}
 	
 	public void touchAll(String subscribe_id) throws Exception {
-
+		
 		login();
 
 		HttpPost req = new HttpPost(domain + "/api/touch_all");
@@ -155,11 +168,12 @@ public class LDRClient extends DefaultHttpClient {
         params.add(new BasicNameValuePair("ApiKey", session_id));
 
 		req.setEntity(new UrlEncodedFormEntity(params));
-        execute(req);
+		HttpClient client = createDefaultClient();
+        client.execute(req);
 	}
 	
 	public void touch(String subscribe_id, long timestamp) throws Exception {
-
+		
 		login();
 
 		HttpPost req = new HttpPost(domain + "/api/touch_all");
@@ -170,11 +184,12 @@ public class LDRClient extends DefaultHttpClient {
         params.add(new BasicNameValuePair("ApiKey", session_id));
 
 		req.setEntity(new UrlEncodedFormEntity(params));
-        execute(req);
+		HttpClient client = createDefaultClient();
+        client.execute(req);
 	}
 	
 	public void pin_add(Feed feed) throws Exception {
-
+		
 		login();
 
 		HttpPost req = new HttpPost(domain + "/api/pin/add");
@@ -185,24 +200,17 @@ public class LDRClient extends DefaultHttpClient {
         params.add(new BasicNameValuePair("ApiKey", session_id));
 
 		req.setEntity(new UrlEncodedFormEntity(params, "utf-8"));
-        execute(req);
+		HttpClient client = createDefaultClient();
+        client.execute(req);
 	}
 
 	// HttpResponseのbodyを取得
 	private String getContent(HttpResponse response) {
 		try {
-			InputStream in = response.getEntity().getContent();
-			
-			InputStreamReader isr = new InputStreamReader(in);
-	    	BufferedReader buf = new BufferedReader(isr);
-	        StringBuilder strb = new StringBuilder();
+			ByteArrayOutputStream baos = new ByteArrayOutputStream(10*1024);
+			response.getEntity().writeTo(baos);
 	        
-	        String sline;
-			while ( (sline = buf.readLine()) != null ) {
-				strb.append(sline + "\n");
-			}
-	        
-	        return strb.toString();
+	        return baos.toString("UTF-8");
 		} catch (IllegalStateException e) {
 			e.printStackTrace();
 		} catch (IOException e) {
@@ -232,7 +240,8 @@ public class LDRClient extends DefaultHttpClient {
 		request.setEntity(new UrlEncodedFormEntity(params));
 		
 		// ログイン
-		HttpResponse response = execute(request);
+		HttpClient client = createDefaultClient();
+		HttpResponse response = client.execute(request);
 
 		// LDRセッションIDの取得
 		Header[] headers = response.getHeaders("Set-Cookie");
@@ -243,6 +252,7 @@ public class LDRClient extends DefaultHttpClient {
 			
 			if ( m.find() ) {
 				session_id = m.group(1);
+				cookie_store = ((DefaultHttpClient)client).getCookieStore();
 			}
 		}
 		

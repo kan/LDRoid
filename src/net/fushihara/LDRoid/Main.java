@@ -312,6 +312,7 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     				if (feeds_cache.isExists(subs_id)) {
 	    		        SubsAdapter adapter = (SubsAdapter)getListAdapter();
 	    		        adapter.setFlag(subs_id, SubsAdapter.FLAG_PREFETCHED);
+	    		        getListView().invalidateViews();
     				}
     			}
     		}

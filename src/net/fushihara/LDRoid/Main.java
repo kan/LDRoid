@@ -15,9 +15,7 @@ import net.fushihara.LDRoid.LDRClient.Subscribe;
 import net.fushihara.LDRoid.PrefetchUnReadFeedsTask.OnPrefetchUnReadFeedsListener;
 import android.app.ListActivity;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -46,7 +44,6 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 	private PrefetchUnReadFeedsTask prefetch_task;
 	private int prefetch_start_position;
 
-	private LDRClient client;
 	private UnReadFeedsCache feeds_cache;
 
 	/** Called when the activity is first created. */
@@ -71,19 +68,21 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     
 	private void loadSubs() {
 		Log.d(TAG, "loadSubs");
-		if ( client == null ) {
-		    LDRClientAccount account = getAccount();
 
-		    if (account.isEmpty()) {
-				// ID/PW未設定
-		    	showSetting();
-	        	return;
-			}
-			client = new LDRClient(account);
+		LDRClient client = getClient();
+		if ( client == null ) {
+			// ID/PW未設定
+	    	showSetting();
+        	return;
 		}
 
 		GetSubsTask task = new GetSubsTask(this);
 		task.execute(client);
+	}
+	
+	private LDRClient getClient() {
+		LDRoidApplication app = (LDRoidApplication)getApplication(); 
+		return app.getClient();
 	}
 	
 	public void onGetSubsTaskCompleted(List<Subscribe> result, Exception error) {
@@ -139,15 +138,6 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
      	startActivityForResult(intent, REQUEST_SETTING);
 	}
 	
-	private LDRClientAccount getAccount() {
-		SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
-		LDRClientAccount account = new LDRClientAccount(
-				pref.getString("login_id", null),
-				pref.getString("password", null)
-			);
-		return account;
-	}
-	
 	// フィードの先読み
 	private void prefetch() {
 		if (prefetch_task != null) {
@@ -161,11 +151,9 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 			return;
 		}
 
+		LDRClient client = getClient();
 		if (client == null) {
-			LDRClientAccount account = getAccount();
-			if (account.isEmpty()) return;
-			
-			client = new LDRClient(account);
+			return;
 		}
 		
 		// 先読み開始位置から PREFETCH_COUNT 分のフィードの
@@ -301,13 +289,13 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     	switch (requestCode) {
     	case REQUEST_SETTING:
     		// 設定画面から帰ってきたらアカウントが変更されていないか確認する
-    		if (client != null) {
+    		LDRoidApplication app = (LDRoidApplication)getApplication();
+    		LDRClient client = app.getClient();
+    		if (!client.getAccount().equals(app.getAccount())) {
         		// アカウントが変更されていたら、新しいアカウントで再取得する
-    			LDRClientAccount newAccount = getAccount();
-    			if (!newAccount.equals(client.getAccount())) {
-    				client = null;
-    				loadSubs();
-    			}
+    			// TODO:
+    			app.clearClient();
+				loadSubs();
     		}
     		break;
     	case REQUEST_FEEDVIEW:
@@ -353,8 +341,6 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
         
         Intent i = new Intent(this, FeedView.class);
         Subscribe sub = subs.get(position);
-        LDRClientAccount account = getAccount();
-		i.putExtra(KEY_LOGIN_ID, account);
         i.putExtra(KEY_SUBS_ID, sub.subscribe_id);
         i.putExtra(KEY_SUBS_TITLE, sub.title);
         startActivityForResult(i, REQUEST_FEEDVIEW);

@@ -24,7 +24,6 @@ public class FeedView extends Activity implements OnClickListener {
 	private Feeds feeds;
 	private int feed_pos;
 	private Button pin_button;
-	private LDRClient client;
 	private TextView title;
 	private UnReadFeedsCache cache;
 
@@ -56,24 +55,21 @@ public class FeedView extends Activity implements OnClickListener {
         	subscribe_title = extra != null ? extra.getString(Main.KEY_SUBS_TITLE) : null;
         	title.setText(subscribe_title);
         }
-                
-        if ( client == null ) {
-        	Bundle extra = getIntent().getExtras();
-        	LDRClientAccount account;
-			account = extra != null ? 
-					(LDRClientAccount)extra.getSerializable(Main.KEY_LOGIN_ID) : null;
-        	client = new LDRClient(account);
-        }
-        
+               
         cache = UnReadFeedsCache.getInstance(getApplicationContext());
         Feeds cached_feeds = cache.getFeeds(subscribe_id);
         if (cached_feeds != null) {
         	setFeeds(cached_feeds);
         }
         else {
-	        GetUnReadFeedsTask task = new GetUnReadFeedsTask(this, client);
+	        GetUnReadFeedsTask task = new GetUnReadFeedsTask(this, getClient());
 	        task.execute(subscribe_id);
         }
+    }
+    
+    private LDRClient getClient() {
+    	LDRoidApplication app = (LDRoidApplication)getApplication();
+    	return app.getClient();
     }
     
     public void onGetUnReadFeedsTaskCompleted(Feeds result, Exception e) {
@@ -116,7 +112,7 @@ public class FeedView extends Activity implements OnClickListener {
 			title.setText("("+String.valueOf(feed_pos+1)+"/"+feeds.size()+")"+subscribe_title);
 			
 			if ( feed_pos + 1 == feeds.size() ) {
-				TouchFeedTask task = new TouchFeedTask(title, client, feeds.last_stored_on);
+				TouchFeedTask task = new TouchFeedTask(title, getClient(), feeds.last_stored_on);
 				task.execute(subscribe_id);
 				
 				Intent intent = new Intent();
@@ -149,7 +145,7 @@ public class FeedView extends Activity implements OnClickListener {
 		}
 		if ( v == pin_button ) {
 			if (currentFeed() != null) {
-				SetPinTask task = new SetPinTask(this, client);
+				SetPinTask task = new SetPinTask(this, getClient());
 				task.execute(currentFeed());
 			}
 		}

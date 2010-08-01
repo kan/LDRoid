@@ -32,6 +32,8 @@ public class FeedView extends Activity implements OnClickListener {
     public void onCreate(Bundle instance) {
         super.onCreate(instance);
         
+		setResult(RESULT_CANCELED, getIntent());
+
         requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
         setContentView(R.layout.feed_view);
         getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.feed_view_title);
@@ -115,9 +117,7 @@ public class FeedView extends Activity implements OnClickListener {
 				TouchFeedTask task = new TouchFeedTask(title, getClient(), feeds.last_stored_on);
 				task.execute(subscribe_id);
 				
-				Intent intent = new Intent();
-				intent.putExtra(Main.KEY_SUBS_ID, subscribe_id);
-				setResult(RESULT_OK, intent);
+				setResult(RESULT_OK, getIntent());
 			}
 		}
 		updateButtons();

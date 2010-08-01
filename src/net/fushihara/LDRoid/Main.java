@@ -301,10 +301,18 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     	case REQUEST_FEEDVIEW:
     		// FeedView から戻ったとき、既読化されていたら(RESULT_OK)
     		// subs の unread_count を 0 にする
-    		if (resultCode == RESULT_OK && data != null) {
+    		if (data != null) {
     			String subs_id = data.getStringExtra(KEY_SUBS_ID);
     			if (subs_id != null) {
-    				resetUnreadCount(subs_id);
+        			if (resultCode == RESULT_OK) {
+        				resetUnreadCount(subs_id);
+        			}
+
+        			// FeedViewでキャッシュが作成されたか確認
+    				if (feeds_cache.isExists(subs_id)) {
+	    		        SubsAdapter adapter = (SubsAdapter)getListAdapter();
+	    		        adapter.setFlag(subs_id, SubsAdapter.FLAG_PREFETCHED);
+    				}
     			}
     		}
     		break;
@@ -344,7 +352,7 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
         i.putExtra(KEY_SUBS_ID, sub.subscribe_id);
         i.putExtra(KEY_SUBS_TITLE, sub.title);
         startActivityForResult(i, REQUEST_FEEDVIEW);
-        
+
         prefetch_start_position = position + 1;
         prefetch();
     }

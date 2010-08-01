@@ -87,6 +87,9 @@ public class ObjToFile {
 			fis = context.openFileInput(getFileName(name));
 			ois = new ObjectInputStream(fis);
 			o = ois.readObject();
+		} catch (FileNotFoundException e) {
+			// ÉtÉ@ÉCÉãÇ™ë∂ç›ÇµÇ»Ç¢Ç∆Ç´
+			;
 		} catch (IOException e) {
 			e.printStackTrace();
 		} catch (ClassNotFoundException e) {

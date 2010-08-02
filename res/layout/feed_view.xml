@@ -1,23 +1,50 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout
-  xmlns:android="http://schemas.android.com/apk/res/android"
-  android:orientation="vertical"
-  android:layout_width="fill_parent"
-  android:layout_height="fill_parent">
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent">
+	<WebView
+		android:id="@+id/web_view"
+		android:layout_width="fill_parent"
+		android:layout_height="fill_parent"
+		android:layout_weight="1.0"></WebView>
+
+
 	<LinearLayout
-	  xmlns:android="http://schemas.android.com/apk/res/android"
-	  android:layout_width="fill_parent"
-	  android:layout_height="fill_parent"
-	  android:layout_weight="1.0">
-		<WebView android:id="@+id/web_view" android:layout_width="fill_parent" android:layout_height="fill_parent" android:layout_weight="1.0"></WebView>
-	</LinearLayout>
-	<LinearLayout
-	  xmlns:android="http://schemas.android.com/apk/res/android"
-	  android:layout_width="wrap_content"
-	  android:layout_height="wrap_content">
-		<Button android:text="@string/prev_button" android:id="@+id/PrevButton" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
-		<Button android:text="@string/next_button" android:id="@+id/NextButton" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
-		<Button android:text="@string/open_button" android:id="@+id/OpenButton" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
-		<Button android:text="@string/pin_button" android:id="@+id/PinButton" android:layout_width="wrap_content" android:layout_height="wrap_content"></Button>
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content"
+		android:paddingLeft="5dip"
+		android:paddingTop="4dip"
+		android:paddingRight="4dip"
+		android:paddingBottom="1dip"
+		android:background="@android:drawable/bottom_bar">
+<!--		android:style="@android:style/ButtonBar"-->
+
+		<Button
+			android:text="@string/prev_button"
+			android:id="@+id/PrevButton"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:focusable="false"></Button>
+		<Button
+			android:text="@string/next_button"
+			android:id="@+id/NextButton"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:layout_weight="1"
+			android:focusable="false"></Button>
+		<Button
+			android:text="@string/open_button"
+			android:id="@+id/OpenButton"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:focusable="false"></Button>
+		<Button
+			android:text="@string/pin_button"
+			android:id="@+id/PinButton"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:focusable="false"></Button>
 	</LinearLayout>
 </LinearLayout>

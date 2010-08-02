@@ -5,13 +5,13 @@
   	<EditTextPreference android:key="login_id"
   	                    android:title="@string/pref_login_id_title"
   	                    android:summary="@string/pref_login_id_summary"
-  	                    android:singleLine="true"
+  	                    android:inputType="text|textEmailAddress"
   	                    android:defaultValue="" />
   	<EditTextPreference android:key="password"
   	                    android:title="@string/pref_password_title"
   	                    android:summary="@string/pref_password_summary"
   	                    android:password="true"
-  	                    android:singleLine="true"
+  	                    android:inputType="text"
   	                    android:defaultValue="" />
   </PreferenceScreen>
 </PreferenceScreen>

@@ -1,20 +1,22 @@
 package net.fushihara.LDRoid;
 
 import android.os.AsyncTask;
-import android.widget.TextView;
-import android.widget.Toast;
 
 public class TouchFeedTask extends AsyncTask<String, Void, Void> {
+	
+	public interface OnTouchFeedTaskListener {
+		public void onTouchFeedTaskComplete(Object sender, Exception e);
+	}
 
 	private LDRClient client;
-	private TextView title;
-	private Exception error = null;
+	private Exception error;
 	private long timestamp;
+	private OnTouchFeedTaskListener listener; 
 	
-	public TouchFeedTask(TextView title, LDRClient client, long timestamp) {
+	public TouchFeedTask(LDRClient client, long timestamp, OnTouchFeedTaskListener listener) {
 		this.client = client;
-		this.title  = title;
 		this.timestamp = timestamp;
+		this.listener = listener;
 	}
 	
 	@Override
@@ -31,13 +33,8 @@ public class TouchFeedTask extends AsyncTask<String, Void, Void> {
 
 	@Override
 	protected void onPostExecute(Void result) {
-		if (error != null) {
-			Toast.makeText(title.getContext(),
-					"ERROR: " + error.getMessage(),
-					Toast.LENGTH_LONG).show();
-		}
-		else {
-			title.setText("Šù“Ç‚É‚µ‚Ü‚µ‚½");
+		if (listener != null) {
+			listener.onTouchFeedTaskComplete(this, error);
 		}
 	}
 }

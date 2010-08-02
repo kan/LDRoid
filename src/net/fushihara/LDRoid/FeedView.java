@@ -2,6 +2,7 @@ package net.fushihara.LDRoid;
 
 import net.fushihara.LDRoid.LDRClient.Feed;
 import net.fushihara.LDRoid.LDRClient.Feeds;
+import net.fushihara.LDRoid.TouchFeedTask.OnTouchFeedTaskListener;
 import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
@@ -14,7 +15,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class FeedView extends Activity implements OnClickListener {
+public class FeedView extends Activity implements OnClickListener, OnTouchFeedTaskListener {
 	private WebView webView;
 	private Button prev_button;
 	private Button next_button;
@@ -24,7 +25,6 @@ public class FeedView extends Activity implements OnClickListener {
 	private Feeds feeds;
 	private int feed_pos;
 	private Button pin_button;
-	private TextView title;
 	private UnReadFeedsCache cache;
 
 	/** Called when the activity is first created. */
@@ -32,11 +32,10 @@ public class FeedView extends Activity implements OnClickListener {
     public void onCreate(Bundle instance) {
         super.onCreate(instance);
         
+        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		setResult(RESULT_CANCELED, getIntent());
 
-        requestWindowFeature(Window.FEATURE_CUSTOM_TITLE);
         setContentView(R.layout.feed_view);
-        getWindow().setFeatureInt(Window.FEATURE_CUSTOM_TITLE, R.layout.feed_view_title);
         
         prev_button = (Button) findViewById(R.id.PrevButton);
         prev_button.setOnClickListener(this);
@@ -47,7 +46,6 @@ public class FeedView extends Activity implements OnClickListener {
         pin_button = (Button) findViewById(R.id.PinButton);
         pin_button.setOnClickListener(this);
         webView = (WebView) findViewById(R.id.web_view);
-        title = (TextView) findViewById(R.id.title_text);
         
         subscribe_id = instance != null ? instance.getString(Main.KEY_SUBS_ID) : null;
         
@@ -55,7 +53,7 @@ public class FeedView extends Activity implements OnClickListener {
         	Bundle extra = getIntent().getExtras();
         	subscribe_id = extra != null ? extra.getString(Main.KEY_SUBS_ID) : null;
         	subscribe_title = extra != null ? extra.getString(Main.KEY_SUBS_TITLE) : null;
-        	title.setText(subscribe_title);
+        	setTitle(subscribe_title);
         }
                
         cache = UnReadFeedsCache.getInstance(getApplicationContext());
@@ -111,10 +109,12 @@ public class FeedView extends Activity implements OnClickListener {
 		if (feed != null) {
 			String body_html = "<h2>" + feed.title + "</h2>\n" + feed.body;
 			webView.loadDataWithBaseURL(feed.link, body_html, "text/html", "utf-8","null");
-			title.setText("("+String.valueOf(feed_pos+1)+"/"+feeds.size()+")"+subscribe_title);
+			setTitle("("+String.valueOf(feed_pos+1)+"/"+feeds.size()+")"+subscribe_title);
 			
 			if ( feed_pos + 1 == feeds.size() ) {
-				TouchFeedTask task = new TouchFeedTask(title, getClient(), feeds.last_stored_on);
+				// 既読にするタスクを開始
+				TouchFeedTask task = new TouchFeedTask(getClient(), 
+						feeds.last_stored_on, this);
 				task.execute(subscribe_id);
 				
 				setResult(RESULT_OK, getIntent());
@@ -154,6 +154,16 @@ public class FeedView extends Activity implements OnClickListener {
 	private Feed currentFeed() {
 		if (feeds == null || feeds.size()==0) return null;
 		return feeds.get(feed_pos);
+	}
+
+	@Override
+	public void onTouchFeedTaskComplete(Object sender, Exception e) {
+		if (e != null) {
+			Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
+		}
+		else {
+			Toast.makeText(this, getText(R.string.toast_touched), Toast.LENGTH_SHORT).show();
+		}
 	}
 	
 }

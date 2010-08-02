@@ -7,15 +7,19 @@ import android.app.Activity;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.view.Window;
 import android.view.View.OnClickListener;
+import android.view.View.OnKeyListener;
 import android.webkit.WebView;
 import android.widget.Button;
-import android.widget.TextView;
 import android.widget.Toast;
 
 public class FeedView extends Activity implements OnClickListener, OnTouchFeedTaskListener {
+	private static final String TAG = "FeedView";
+	
 	private WebView webView;
 	private Button prev_button;
 	private Button next_button;
@@ -46,6 +50,13 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
         pin_button = (Button) findViewById(R.id.PinButton);
         pin_button.setOnClickListener(this);
         webView = (WebView) findViewById(R.id.web_view);
+        
+        webView.setOnKeyListener(new OnKeyListener() {
+			@Override
+			public boolean onKey(View v, int keyCode, KeyEvent event) {
+				return processKey(keyCode, event);
+			}
+		});
         
         subscribe_id = instance != null ? instance.getString(Main.KEY_SUBS_ID) : null;
         
@@ -156,6 +167,25 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 		return feeds.get(feed_pos);
 	}
 
+	private boolean processKey(int keyCode, KeyEvent event) {
+		if (event.getAction() == KeyEvent.ACTION_UP) {
+			Log.d(TAG, Integer.toString(keyCode));
+			switch (keyCode) {
+			case KeyEvent.KEYCODE_SPACE:
+				if (event.isShiftPressed()) webView.pageUp(false);
+				else webView.pageDown(false);
+				return true;
+			case KeyEvent.KEYCODE_J:
+				onClick(next_button);
+				return true;
+			case KeyEvent.KEYCODE_K:
+				onClick(prev_button);
+				return true;
+			}
+		}
+		return false;
+	}
+	
 	@Override
 	public void onTouchFeedTaskComplete(Object sender, Exception e) {
 		if (e != null) {

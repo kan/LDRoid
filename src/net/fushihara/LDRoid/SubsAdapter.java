@@ -1,12 +1,8 @@
 package net.fushihara.LDRoid;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-
-import net.fushihara.LDRoid.LDRClient.Subscribe;
 import android.content.Context;
 import android.content.res.Resources;
+import android.content.res.TypedArray;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -21,21 +17,20 @@ class SubsAdapter extends BaseAdapter {
 	public static final byte FLAG_PREFETCHED = 0x01;
 
 	private static int [] rateColors;
+	private static int title_normal;
+	private static int title_empty;
+	private static int title_prefetched;
 	
-	private List<Subscribe> items;
-	private HashMap<String,Byte> itemsFlag;
+	private SubscribeLocalList items;
 	private LayoutInflater inflater;
-	private Context context;
 	
-	public SubsAdapter(Context context, List<Subscribe> subs) {
-		this.context = context;
+	public SubsAdapter(Context context, SubscribeLocalList subs) {
 		items = subs;
-		itemsFlag = new HashMap<String,Byte>();
 		
 		inflater = (LayoutInflater)context.getSystemService(
 				Context.LAYOUT_INFLATER_SERVICE);
 		if (items == null) {
-			items = new ArrayList<Subscribe>();
+			items = new SubscribeLocalList();
 		}
 		
 		if (rateColors == null) {
@@ -48,19 +43,11 @@ class SubsAdapter extends BaseAdapter {
 	        		res.getColor(R.color.rate4),
 	        		res.getColor(R.color.rate5),
 	        };
+	        TypedArray a = context.obtainStyledAttributes(R.styleable.SubsAdapter);
+	        title_normal = a.getColor(R.styleable.SubsAdapter_feedTitleColorNormal, 0xFFD7D7D7);
+	        title_empty = a.getColor(R.styleable.SubsAdapter_feedTitleColorEmpty, 0xFF707070);
+	        title_prefetched = a.getColor(R.styleable.SubsAdapter_feedTitleColorPrefetched, 0xFF00D7D7);
 		}
-	}
-	
-	public void setFlag(String subscribe_id, byte flag) {
-		itemsFlag.put(subscribe_id, flag);
-	}
-	
-	public byte getFlag(String subscribe_id) {
-		Byte b = itemsFlag.get(subscribe_id);
-		if (b == null) {
-			return 0;
-		}
-		return b;
 	}
 	
 	@Override
@@ -84,27 +71,27 @@ class SubsAdapter extends BaseAdapter {
 		if (view == null) {
 			view = inflater.inflate(R.layout.subs_row, null);
 		}
-		Subscribe s = items.get(position);
-		byte flag = getFlag(s.subscribe_id);
+		SubscribeLocal s = items.get(position);
 		
 		TextView t = (TextView)view.findViewById(R.id.title);
-		t.setText(s.title);
-		if (s.unread_count == 0) {
-			t.setTextAppearance(context, R.style.subs_title_empty);
+		t.setText(s.getTitle());
+		if (s.getUnreadCount() == 0) {
+			t.setTextColor(title_empty);
 		}
-		else if ((flag & FLAG_PREFETCHED) != 0) {
-			t.setTextAppearance(context, R.style.subs_title_prefetched);
+		else if (s.isPrefetched()) {
+			t.setTextColor(title_prefetched);
 		}
 		else {
-			t.setTextAppearance(context, R.style.subs_title);
+			t.setTextColor(title_normal);
 		}
 		
 		t = (TextView)view.findViewById(R.id.count);
-		t.setText(Integer.toString(s.unread_count));
+		t.setText(Integer.toString(s.getUnreadCount()));
 		
 		t = (TextView)view.findViewById(R.id.ratebar);
-		if (s.rate >= 0 && s.rate <= 5) {
-			t.setBackgroundColor(rateColors[s.rate]);
+		int rate = s.getRate();
+		if (rate >= 0 && rate <= 5) {
+			t.setBackgroundColor(rateColors[rate]);
 		}
 		else {
 			t.setBackgroundColor(rateColors[0]);

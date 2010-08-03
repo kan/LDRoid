@@ -19,6 +19,8 @@ import android.widget.Toast;
 
 public class FeedView extends Activity implements OnClickListener, OnTouchFeedTaskListener {
 	private static final String TAG = "FeedView";
+
+	public static final String KEY_TOUCHED = "touched";
 	
 	public static final int RESULT_NEXTUNREAD = RESULT_FIRST_USER;
 	
@@ -28,6 +30,7 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 	private Button open_button;
 	private String subscribe_title;
 	private String subscribe_id;
+	private int subscribe_unread_count;
 	private Feeds feeds;
 	private int feed_pos;
 	private Button pin_button;
@@ -66,6 +69,7 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
         	Bundle extra = getIntent().getExtras();
         	subscribe_id = extra != null ? extra.getString(Main.KEY_SUBS_ID) : null;
         	subscribe_title = extra != null ? extra.getString(Main.KEY_SUBS_TITLE) : null;
+        	subscribe_unread_count = extra != null ? extra.getInt(Main.KEY_SUBS_UNREAD_COUNT) : null;
         	setTitle(subscribe_title);
         }
                
@@ -124,13 +128,14 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 			webView.loadDataWithBaseURL(feed.link, body_html, "text/html", "utf-8","null");
 			setTitle("("+String.valueOf(feed_pos+1)+"/"+feeds.size()+")"+subscribe_title);
 			
-			if ( feed_pos + 1 == feeds.size()) {
+			if ( feed_pos + 1 == feeds.size() && subscribe_unread_count > 0) {
 				// 既読にするタスクを開始
+				
 				TouchFeedTask task = new TouchFeedTask(getClient(), 
 						feeds.last_stored_on, this);
 				task.execute(subscribe_id);
-				
-				setResult(RESULT_OK, getIntent());
+
+				getIntent().putExtra(KEY_TOUCHED, true);
 			}
 		}
 		updateButtons();

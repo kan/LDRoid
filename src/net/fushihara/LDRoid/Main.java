@@ -17,6 +17,7 @@ import android.app.ListActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,6 +31,7 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     public static final String KEY_PASSWORD = "password";
     public static final String KEY_SUBS_ID  = "subs_id";
     public static final String KEY_SUBS_TITLE = "subs_title";
+    public static final String KEY_SUBS_UNREAD_COUNT = "subs_unread_count";
     private static final String SUBS_FILE = "subs";
     private static final int PREFETCH_COUNT = 5;
     
@@ -39,8 +41,7 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 	private static final int MENU_RELOAD_ID  = 0;
 	private static final int MENU_SETTING_ID = 1;
 
-	private List<Subscribe> subs;
-	private boolean isSubsSaved = true;
+	private SubscribeLocalList subs;
 	private PrefetchUnReadFeedsTask prefetch_task;
 	private int prefetch_start_position;
 
@@ -55,8 +56,26 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 
         feeds_cache = UnReadFeedsCache.getInstance(getApplicationContext());
         
-        // 保存されている subs をセット
-        setSubs(loadSubsFromFile());
+        // 保存されている subs を読み込む
+        loadFromFile();
+    }
+    
+    private void loadFromFile() {
+    	SubscribeLocalList merged = null;
+        SubscribeLocalList sll = loadSubsLocalFromFile();
+        if (sll != null) {
+        	List<Subscribe> subs = loadSubsFromFile();
+        	if (subs != null) {
+        		merged = new SubscribeLocalList(subs, sll);
+        	}
+        }
+
+        if (merged == null) {
+        	setSubs(new SubscribeLocalList());
+        }
+        else {
+        	setSubs(merged);
+        }
     }
     
     @Override
@@ -112,23 +131,26 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 		// 読み込んだ subs をファイルに書き出す
 		saveSubsToFile((ArrayList<Subscribe>)result);
 		
-		setSubs(result);
+		SubscribeLocalList subsLocal = new SubscribeLocalList(result);
+		//removeSubsLocalFile(subsLocal);
+		setSubs(subsLocal);
 	}
 	
-	private void setSubs(List<Subscribe> newSubs) {
-		
+	private void setSubs(SubscribeLocalList newSubs) {
 		subs = newSubs;
-		
-		SubsAdapter adapter = new SubsAdapter(this, subs);
-		setListAdapter(adapter);
 		
 		// キャッシュ済みかどうかのフラグを設定
 		ArrayList<String> cachedList = feeds_cache.getList();
 		int cachedList_size = cachedList.size();
 		for (int j=0; j<cachedList_size; j++) {
-			adapter.setFlag(cachedList.get(j), SubsAdapter.FLAG_PREFETCHED);
+			SubscribeLocal sl = subs.getItemById(cachedList.get(j));
+			if (sl != null) {
+				sl.setPrefetched(true);
+			}
 		}
 		
+		SubsAdapter adapter = new SubsAdapter(this, subs);
+		setListAdapter(adapter);
 		prefetch_start_position = 0;
         prefetch();
 	}
@@ -159,13 +181,13 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 		// 先読み開始位置から PREFETCH_COUNT 分のフィードの
 		// キャッシュの存在を確認して、キャッシュがなければタスクを起動
 		for (int j=0; j<PREFETCH_COUNT; j++) {
-			Subscribe sub = (Subscribe) adapter.getItem(position);
-			if (!feeds_cache.isExists(sub.subscribe_id)) {
+			SubscribeLocal sub = (SubscribeLocal)adapter.getItem(position);
+			if (!sub.isPrefetched() && !feeds_cache.isExists(sub.getSubscribeId())) {
 				// キャッシュが作成されていないものを見つけたらタスクを起動
 				Log.d(TAG, "prefetch " + position);
 				prefetch_task = new PrefetchUnReadFeedsTask(client, this);
 				setProgressBarIndeterminateVisibility(true);
-				prefetch_task.execute(sub.subscribe_id);
+				prefetch_task.execute(sub.getSubscribeId());
 				break;
 			}
 			if (++position >= adapter.getCount()) {
@@ -188,9 +210,12 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 			// パフォーマンスが良いと思うが、FeedView で書き込みが
 			// 同時に発生する可能性があるのでメインスレッドで実行
 			feeds_cache.put(subscribe_id, feeds);
-			SubsAdapter adapter = (SubsAdapter)getListAdapter();
-			adapter.setFlag(subscribe_id, SubsAdapter.FLAG_PREFETCHED);
-			getListView().invalidateViews();
+			
+			SubscribeLocal sl = subs.getItemById(subscribe_id);
+			if (sl != null) {
+				sl.setPrefetched(true);
+				getListView().invalidateViews();
+			}
 			
 			// 次の先読みを開始
 			prefetch();
@@ -220,7 +245,6 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 	
 	private void saveSubsToFile(List<Subscribe> subs) {
 		Log.d(TAG, "saveSubsToFile");
-		isSubsSaved = true;
 		FileOutputStream fos = null;
 		ObjectOutputStream oos = null;
 		try {
@@ -247,13 +271,28 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 		}
 	}
 	
+	private void saveSubsLocalToFile() {
+		ObjToFile of = new ObjToFile(this, "subs_local");
+		of.put("0", subs);
+	}
+	
+	private SubscribeLocalList loadSubsLocalFromFile() {
+		SubscribeLocalList  sl = null;
+		try {
+			ObjToFile of = new ObjToFile(this, "subs_local");
+			sl = new SubscribeLocalList(
+					loadSubsFromFile(),
+					(SubscribeLocalList)of.get("0"));
+		}
+		catch (Exception e) {
+		}
+		return sl;
+	}
+	
 	@Override
 	protected void onStop() {
 		super.onStop();
-		if (!isSubsSaved) {
-			saveSubsToFile(subs);
-			isSubsSaved = true;
-		}
+		saveSubsLocalToFile();
 	}
 
 	@Override
@@ -304,15 +343,21 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     		if (data != null) {
     			String subs_id = data.getStringExtra(KEY_SUBS_ID);
     			if (subs_id != null) {
-        			if (resultCode == RESULT_OK) {
-        				resetUnreadCount(subs_id);
+        			if (data.hasExtra(FeedView.KEY_TOUCHED)) {
+        				SubscribeLocal sl = subs.getItemById(subs_id);
+        				if (sl != null) {
+        					sl.setTouchState(SubscribeLocal.TOUCH_FINISHED);
+        					getListView().invalidateViews();
+        				}
         			}
 
         			// FeedViewでキャッシュが作成されたか確認
     				if (feeds_cache.isExists(subs_id)) {
-	    		        SubsAdapter adapter = (SubsAdapter)getListAdapter();
-	    		        adapter.setFlag(subs_id, SubsAdapter.FLAG_PREFETCHED);
-	    		        getListView().invalidateViews();
+    					SubscribeLocal sl = subs.getItemById(subs_id);
+    					if (sl != null) {
+    						sl.setPrefetched(true);
+    	    		        getListView().invalidateViews();
+    					}
     				}
     			}
     		}
@@ -320,25 +365,6 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     	}
     }
     
-    private void resetUnreadCount(String subs_id)  {
-    	int subs_size = subs.size();
-		for (int j=0; j<subs_size; j++) {
-			Subscribe sub = subs.get(j); 
-			if (sub.subscribe_id.equals(subs_id)) {
-				if (sub.unread_count > 0) {
-					sub.unread_count = 0;
-					getListView().invalidateViews();
-					isSubsSaved = false;
-					// TODO: isSubsSaved が false の場合に
-					// onStop が呼ばれると、フィード一覧がファイルに書き出されるが、
-					// フィードの数が多くなると無駄が大きいので、フィード一覧と
-					// unread_count == 0 かどうかの情報は分けて管理した方が良いかもしれない
-					// (たとえば unread_count == 0 の subscribe_id のリストを保存するとか)
-				}
-				break;
-			}
-		}
-    }
 	
     @Override
     protected void onListItemClick(ListView l, View v, int position, long id) {
@@ -349,14 +375,37 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
         // 発生してしまうので少し無駄に待たされる
         
         Intent i = new Intent(this, FeedView.class);
-        Subscribe sub = subs.get(position);
-        i.putExtra(KEY_SUBS_ID, sub.subscribe_id);
-        i.putExtra(KEY_SUBS_TITLE, sub.title);
+        SubscribeLocal sub = subs.get(position);
+        i.putExtra(KEY_SUBS_ID, sub.getSubscribeId());
+        i.putExtra(KEY_SUBS_TITLE, sub.getTitle());
+        i.putExtra(KEY_SUBS_UNREAD_COUNT, sub.getUnreadCount());
         startActivityForResult(i, REQUEST_FEEDVIEW);
 
         prefetch_start_position = position + 1;
         prefetch();
     }
-
     
+    @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+    	switch (keyCode) {
+    	case KeyEvent.KEYCODE_S:
+    		showNextUnread();
+    		break;
+    	}
+    	return super.onKeyDown(keyCode, event);
+    }
+
+    private void showNextUnread() {
+    	ListView list = getListView();
+    	if (list.getCount() == 0) return;
+
+    	int pos = list.getSelectedItemPosition();
+    	
+		Log.d(TAG, Integer.toString(pos));
+		int top_margin = list.getHeight() / 3;
+		if (pos == -1)
+			list.setSelectionFromTop(list.getFirstVisiblePosition()+1, 0);
+		else 
+			list.setSelectionFromTop(pos + 1, top_margin);
+    }
 }

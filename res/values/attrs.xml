@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<declare-styleable name="SubsAdapter">
+		<attr name="feedTitleColorNormal" format="color"></attr>
+		<attr name="feedTitleColorEmpty" format="color"></attr>
+		<attr name="feedTitleColorPrefetched" format="color"></attr>
+	</declare-styleable>
+</resources>

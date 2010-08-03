@@ -20,6 +20,8 @@ import android.widget.Toast;
 public class FeedView extends Activity implements OnClickListener, OnTouchFeedTaskListener {
 	private static final String TAG = "FeedView";
 	
+	public static final int RESULT_NEXTUNREAD = RESULT_FIRST_USER;
+	
 	private WebView webView;
 	private Button prev_button;
 	private Button next_button;
@@ -122,7 +124,7 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 			webView.loadDataWithBaseURL(feed.link, body_html, "text/html", "utf-8","null");
 			setTitle("("+String.valueOf(feed_pos+1)+"/"+feeds.size()+")"+subscribe_title);
 			
-			if ( feed_pos + 1 == feeds.size() ) {
+			if ( feed_pos + 1 == feeds.size()) {
 				// 既読にするタスクを開始
 				TouchFeedTask task = new TouchFeedTask(getClient(), 
 						feeds.last_stored_on, this);
@@ -186,6 +188,10 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 				return true;
 			case KeyEvent.KEYCODE_P:
 				onClick(pin_button);
+				return true;
+			case KeyEvent.KEYCODE_S:
+				setResult(RESULT_NEXTUNREAD);
+				finish();
 				return true;
 			}
 		}

@@ -201,9 +201,15 @@ public class LDRClient {
 
 		req.setEntity(new UrlEncodedFormEntity(params, "utf-8"));
 		HttpClient client = createDefaultClient();
-        client.execute(req);
+        HttpResponse response = client.execute(req);
+        
+        JSONObject jsonroot = new JSONObject(getContent(response));
+        if (jsonroot.getInt("isSuccess") != 1) { 
+	        int errorCode = jsonroot.getInt("ErrorCode");
+	        throw new Exception("ErrorCode: " + Integer.toString(errorCode));
+        }
 	}
-
+	
 	// HttpResponse‚Ìbody‚ðŽæ“¾
 	private String getContent(HttpResponse response) {
 		try {
@@ -278,4 +284,5 @@ public class LDRClient {
 			throw new Exception("Login error");
 		}
 	}
+	
 }

@@ -181,6 +181,12 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 			case KeyEvent.KEYCODE_K:
 				onClick(prev_button);
 				return true;
+			case KeyEvent.KEYCODE_O:
+				onClick(open_button);
+				return true;
+			case KeyEvent.KEYCODE_P:
+				onClick(pin_button);
+				return true;
 			}
 		}
 		return false;

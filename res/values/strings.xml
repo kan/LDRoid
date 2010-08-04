@@ -5,6 +5,7 @@
     <string name="next_button">Next&gt;&gt;</string>
     <string name="open_button">Open</string>
     <string name="pin_button">Pin</string>
+    <string name="share_button">Share</string>
     <string name="menu_reload">リロード</string>
     <string name="pref_account_title">アカウント設定</string>
     <string name="pref_account_summary">livedoor Readerのアカウント設定</string>

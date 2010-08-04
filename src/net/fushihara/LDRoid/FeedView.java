@@ -4,6 +4,7 @@ import net.fushihara.LDRoid.LDRClient.Feed;
 import net.fushihara.LDRoid.LDRClient.Feeds;
 import net.fushihara.LDRoid.TouchFeedTask.OnTouchFeedTaskListener;
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -28,12 +29,13 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 	private Button prev_button;
 	private Button next_button;
 	private Button open_button;
+	private Button pin_button;
+	private Button share_button;
 	private String subscribe_title;
 	private String subscribe_id;
 	private int subscribe_unread_count;
 	private Feeds feeds;
 	private int feed_pos;
-	private Button pin_button;
 	private UnReadFeedsCache cache;
 
 	/** Called when the activity is first created. */
@@ -54,6 +56,8 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
         open_button.setOnClickListener(this);
         pin_button = (Button) findViewById(R.id.PinButton);
         pin_button.setOnClickListener(this);
+        share_button = (Button) findViewById(R.id.ShareButton);
+        share_button.setOnClickListener(this);
         webView = (WebView) findViewById(R.id.web_view);
         
         webView.setOnKeyListener(new OnKeyListener() {
@@ -165,6 +169,16 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 			if (currentFeed() != null) {
 				SetPinTask task = new SetPinTask(this, getClient());
 				task.execute(currentFeed());
+			}
+		}
+		if ( v == share_button ) {
+			Intent intent = new Intent(Intent.ACTION_SEND);
+			intent.setType("plain/text");
+			intent.putExtra(Intent.EXTRA_SUBJECT, currentFeed().title);
+			intent.putExtra(Intent.EXTRA_TEXT, currentFeed().link);
+			try {
+				startActivity(Intent.createChooser(intent, null));
+			} catch (ActivityNotFoundException  e) {
 			}
 		}
 	}

@@ -1,7 +1,5 @@
 package net.fushihara.LDRoid;
 
-import java.util.List;
-import net.fushihara.LDRoid.LDRClient.Feed;
 import net.fushihara.LDRoid.LDRClient.Feeds;
 import android.app.ProgressDialog;
 import android.os.AsyncTask;

@@ -1,5 +1,9 @@
 package net.fushihara.LDRoid;
 
+import java.util.Date;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
 import net.fushihara.LDRoid.LDRClient.Feed;
 import net.fushihara.LDRoid.LDRClient.Feeds;
 import net.fushihara.LDRoid.TouchFeedTask.OnTouchFeedTaskListener;
@@ -37,6 +41,8 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 	private Feeds feeds;
 	private int feed_pos;
 	private UnReadFeedsCache cache;
+	private String template_html;
+	private Matcher template_matcher;
 
 	/** Called when the activity is first created. */
     @Override
@@ -47,6 +53,10 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 		setResult(RESULT_CANCELED, getIntent());
 
         setContentView(R.layout.feed_view);
+        
+        // FeedをHTMLに変換するためのテンプレートを準備
+        template_html = getString(R.string.feed_view_template);
+        template_matcher = Pattern.compile("\\{([a-z0-9-_]+)\\}").matcher(template_html);
         
         prev_button = (Button) findViewById(R.id.PrevButton);
         prev_button.setOnClickListener(this);
@@ -128,7 +138,10 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 	private void loadData() {
 		Feed feed = currentFeed();
 		if (feed != null) {
-			String body_html = "<h2>" + feed.title + "</h2>\n" + feed.body;
+			// TODO: このやりかただと {title}に"{body}"とかかれていたりすると少し問題が
+			
+			String body_html = feedToHtml(feed);
+
 			webView.loadDataWithBaseURL(feed.link, body_html, "text/html", "utf-8","null");
 			setTitle("("+String.valueOf(feed_pos+1)+"/"+feeds.size()+")"+subscribe_title);
 			
@@ -143,6 +156,35 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 			}
 		}
 		updateButtons();
+	}
+	
+	// Feed を HTML に変換する
+	private String feedToHtml(Feed f) {
+		Matcher m = template_matcher;
+		StringBuffer buf = new StringBuffer();
+		int start = 0;
+		String name;
+		while (m.find(start)) {
+			buf.append(template_html, start, m.start());
+			name = m.group(1);
+			if (name.equals("title")) {
+				buf.append(f.title);
+			}
+			else if (name.equals("link")) {
+				buf.append(f.link);
+			}
+			else if (name.equals("body")) {
+				buf.append(f.body);
+			}
+			else if (name.equals("author")) {
+				if (f.author != null && f.author.length() > 0) {
+					buf.append("by " + f.author);
+				}
+			}
+			start = m.end();
+		}
+		buf.append(template_html, start, template_html.length());
+		return buf.toString();
 	}
 
 	@Override

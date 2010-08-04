@@ -16,4 +16,36 @@
 	<string name="menu_setting">設定</string>
 	
 	<string name="toast_touched">既読にしました</string>
+	<string name="feed_view_template"><![CDATA[<html>
+	<head>
+	<style type="text/css">
+	h1 { font-size:120%; margin-top:.25em; margin-bottom:.25em; }
+	.titlebar { margin-bottom:1em; }
+	.metabar { font-size:80%; margin-top:.25em; margin-bottom:.25em; }
+	</style>
+	</head>
+	<body id="body">
+	  <div class="article" id="article{id}">
+	    <div class="articlecontent">
+	       <div class="pinnedarticle" id="{id}">
+	         <div class="titlebar">
+	           <!--
+	           <div class="buttonbar">
+	             <img src="pin_pushed" class="pin" width="32" height="39" id="pin{id}" onClick="onPin('{id}')"/>
+	           </div>
+	           -->
+	           <h1>{title}</h1>
+	           <div class="metabar">
+	              <a href="{link}">元記事</a> | {time} {author}
+	           </div>
+	         </div>
+	         <div class="articlebody">
+	            {body}
+	         </div>
+	       </div>
+	    </div>
+	  </div>
+	</body>
+	</html>]]>
+	</string>
 </resources>

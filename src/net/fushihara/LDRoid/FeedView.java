@@ -1,5 +1,7 @@
 package net.fushihara.LDRoid;
 
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -43,6 +45,7 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 	private UnReadFeedsCache cache;
 	private String template_html;
 	private Matcher template_matcher;
+	private DateFormat dateformat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.SHORT);
 
 	/** Called when the activity is first created. */
     @Override
@@ -180,6 +183,9 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 				if (f.author != null && f.author.length() > 0) {
 					buf.append("by " + f.author);
 				}
+			}
+			else if (name.equals("time")) {
+				buf.append(dateformat.format(new Date(f.date*1000)));
 			}
 			start = m.end();
 		}

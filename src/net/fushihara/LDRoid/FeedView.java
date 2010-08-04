@@ -138,8 +138,6 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 	private void loadData() {
 		Feed feed = currentFeed();
 		if (feed != null) {
-			// TODO: Ç±ÇÃÇ‚ÇËÇ©ÇΩÇæÇ∆ {title}Ç…"{body}"Ç∆Ç©Ç©ÇÍÇƒÇ¢ÇΩÇËÇ∑ÇÈÇ∆è≠Çµñ‚ëËÇ™
-			
 			String body_html = feedToHtml(feed);
 
 			webView.loadDataWithBaseURL(feed.link, body_html, "text/html", "utf-8","null");

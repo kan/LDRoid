@@ -145,7 +145,9 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 		int cachedList_size = cachedList.size();
 		for (int j=0; j<cachedList_size; j++) {
 			SubscribeLocal sl = subs.getItemById(cachedList.get(j));
-			sl.setPrefetched(sl != null);
+			if (sl != null) {
+				sl.setPrefetched(true);
+			}
 		}
 		
 		SubsAdapter adapter = new SubsAdapter(this, subs);

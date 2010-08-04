@@ -14,6 +14,8 @@ import net.fushihara.LDRoid.LDRClient.Feeds;
 import net.fushihara.LDRoid.LDRClient.Subscribe;
 import net.fushihara.LDRoid.PrefetchUnReadFeedsTask.OnPrefetchUnReadFeedsListener;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -41,6 +43,8 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 	private SubscribeLocalList subs;
 	private PrefetchUnReadFeedsTask prefetch_task;
 	private int prefetch_start_position;
+	private int prefetch_limit;
+	private ProgressDialog prefetch_dialog;
 
 	private UnReadFeedsCache feeds_cache;
 
@@ -141,15 +145,12 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 		int cachedList_size = cachedList.size();
 		for (int j=0; j<cachedList_size; j++) {
 			SubscribeLocal sl = subs.getItemById(cachedList.get(j));
-			if (sl != null) {
-				sl.setPrefetched(true);
-			}
+			sl.setPrefetched(sl != null);
 		}
 		
 		SubsAdapter adapter = new SubsAdapter(this, subs);
 		setListAdapter(adapter);
-		prefetch_start_position = 0;
-        prefetch();
+        prefetchStart(0, PREFETCH_COUNT);
 	}
 	
 	private void showSetting() {
@@ -157,27 +158,41 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
      	startActivityForResult(intent, REQUEST_SETTING);
 	}
 	
+	private void prefetchStart(int start_position, int limit) {
+		prefetch_start_position = start_position;
+		prefetch_limit = limit;
+		
+		if (prefetch_dialog != null) {
+			prefetch_dialog.setMax(limit);
+		}
+		
+		if (!prefetchNext()) {
+			prefetchFinish();
+		}
+	}
+	
 	// フィードの先読み
-	private void prefetch() {
+	private boolean prefetchNext() {
 		if (prefetch_task != null) {
-			return;
+			return false;
 		}
 		
 		int position = prefetch_start_position;
 		SubsAdapter adapter = (SubsAdapter)getListAdapter();
 		// フィードが空か、リストの範囲外が指定されたときは先読みしない
 		if (position < 0 || position >= adapter.getCount()) {
-			return;
+			return false;
 		}
 
 		LDRClient client = getClient();
 		if (client == null) {
-			return;
+			return false;
 		}
 		
-		// 先読み開始位置から PREFETCH_COUNT 分のフィードの
-		// キャッシュの存在を確認して、キャッシュがなければタスクを起動
-		for (int j=0; j<PREFETCH_COUNT; j++) {
+		// 先読み開始位置からキャッシュの存在を確認して、キャッシュがなければタスクを起動
+		int last = Math.min(adapter.getCount(), position + prefetch_limit);
+
+		for (; position<last; position++) {
 			SubscribeLocal sub = (SubscribeLocal)adapter.getItem(position);
 			if (!sub.isPrefetched() && !feeds_cache.isExists(sub.getSubscribeId())) {
 				// キャッシュが作成されていないものを見つけたらタスクを起動
@@ -185,11 +200,28 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 				prefetch_task = new PrefetchUnReadFeedsTask(client, this);
 				setProgressBarIndeterminateVisibility(true);
 				prefetch_task.execute(sub.getSubscribeId());
-				break;
+
+				// 「すべて取得」でダイアログが表示されているときは進捗を更新
+				if (prefetch_dialog != null && prefetch_dialog.isShowing() && last > 0) {
+					prefetch_dialog.setProgress(position);
+				}
+				
+				return true;
 			}
-			if (++position >= adapter.getCount()) {
-				break;
-			}
+		}
+		return false;
+	}
+	
+	private void prefetchCancel() {
+		prefetch_limit = 0;
+	}
+
+	// prefetchStart で始まった動作が完了したときの処理
+	private void prefetchFinish() {
+		// 「すべて取得」のダイアログが表示されていたら消す
+		if (prefetch_dialog != null) {
+			prefetch_dialog.dismiss();
+			prefetch_dialog = null;
 		}
 	}
 	
@@ -215,7 +247,9 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 			}
 			
 			// 次の先読みを開始
-			prefetch();
+			if (!prefetchNext()) {
+				prefetchFinish();
+			}
 		}
 	}
 	
@@ -312,11 +346,28 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
         case R.id.menu_setting:
         	showSetting();
         	break;
+        case R.id.menu_fetch_all:
+        	fetchAll();
         }
         return ret;
     }
     
-    @Override
+    // すべて取得
+    private void fetchAll() {
+    	prefetch_dialog = new ProgressDialog(this);
+    	prefetch_dialog.setMessage(getString(R.string.dlg_fetch_all_title));
+    	prefetch_dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+    	prefetch_dialog.setButton(getString(R.string.dlg_cancel), new DialogInterface.OnClickListener() {
+			@Override
+			public void onClick(DialogInterface dialog, int which) {
+				prefetchCancel();
+			}
+		});
+    	prefetch_dialog.show();
+    	prefetchStart(0, getListAdapter().getCount());
+	}
+
+	@Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
     	super.onActivityResult(requestCode, resultCode, data);
     	
@@ -377,8 +428,7 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
         i.putExtra(KEY_SUBS_UNREAD_COUNT, sub.getUnreadCount());
         startActivityForResult(i, REQUEST_FEEDVIEW);
 
-        prefetch_start_position = position + 1;
-        prefetch();
+        prefetchStart(position + 1, PREFETCH_COUNT);
     }
     
     @Override

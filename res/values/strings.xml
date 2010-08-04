@@ -14,6 +14,10 @@
     <string name="pref_password_title">パスワード</string>
     <string name="pref_password_summary">パスワードを入力して下さい</string>
 	<string name="menu_setting">設定</string>
+	<string name="menu_fetch_all">すべて取得</string>
+	
+	<string name="dlg_cancel">キャンセル</string>
+	<string name="dlg_fetch_all_title">取得しています...</string>
 	
 	<string name="toast_touched">既読にしました</string>
 	<string name="feed_view_template"><![CDATA[<html>

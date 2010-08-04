@@ -38,9 +38,6 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     private static final int REQUEST_SETTING = 1;
     private static final int REQUEST_FEEDVIEW = 2;
 
-	private static final int MENU_RELOAD_ID  = 0;
-	private static final int MENU_SETTING_ID = 1;
-
 	private SubscribeLocalList subs;
 	private PrefetchUnReadFeedsTask prefetch_task;
 	private int prefetch_start_position;
@@ -298,8 +295,7 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    super.onCreateOptionsMenu(menu);
- 	    menu.add(0, MENU_RELOAD_ID, 0, R.string.menu_reload).setIcon(android.R.drawable.ic_menu_rotate);
- 	    menu.add(0, MENU_SETTING_ID, 0, R.string.menu_setting).setIcon(android.R.drawable.ic_menu_manage);
+	    getMenuInflater().inflate(R.menu.main_menu, menu);
 	    return true;
 	}
 
@@ -310,10 +306,10 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
         default:
             ret = super.onOptionsItemSelected(item);
             break;
-        case MENU_RELOAD_ID:
+        case R.id.menu_reload:
             loadSubs();
             break;
-        case MENU_SETTING_ID:
+        case R.id.menu_setting:
         	showSetting();
         	break;
         }

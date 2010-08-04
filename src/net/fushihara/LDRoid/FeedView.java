@@ -1,6 +1,5 @@
 package net.fushihara.LDRoid;
 
-import java.util.Date;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -19,6 +18,7 @@ import android.view.Window;
 import android.view.View.OnClickListener;
 import android.view.View.OnKeyListener;
 import android.webkit.WebView;
+import android.webkit.WebViewClient;
 import android.widget.Button;
 import android.widget.Toast;
 
@@ -76,6 +76,8 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 				return processKey(keyCode, event);
 			}
 		});
+        
+        webView.setWebViewClient(new FeedViewWebViewClient());
         
         subscribe_id = instance != null ? instance.getString(Main.KEY_SUBS_ID) : null;
         
@@ -140,7 +142,7 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 		if (feed != null) {
 			String body_html = feedToHtml(feed);
 
-			webView.loadDataWithBaseURL(feed.link, body_html, "text/html", "utf-8","null");
+			webView.loadDataWithBaseURL("x-data://base", body_html, "text/html", "utf-8","null");
 			setTitle("("+String.valueOf(feed_pos+1)+"/"+feeds.size()+")"+subscribe_title);
 			
 			if ( feed_pos + 1 == feeds.size() && subscribe_unread_count > 0) {
@@ -264,6 +266,16 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 		}
 		else {
 			Toast.makeText(this, getText(R.string.toast_touched), Toast.LENGTH_SHORT).show();
+		}
+	}
+	
+	private class FeedViewWebViewClient extends WebViewClient {
+		@Override
+		public boolean shouldOverrideUrlLoading(WebView view, String url) {
+			Log.d(TAG, "shouldOverrideUrlLoading");
+			Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse(url));
+			startActivity(i);
+			return true;
 		}
 	}
 	

@@ -298,14 +298,6 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     		if (data != null) {
     			String subs_id = data.getStringExtra(KEY_SUBS_ID);
     			if (subs_id != null) {
-        			if (data.hasExtra(FeedView.KEY_TOUCHED)) {
-        				SubscribeLocal sl = subs.getItemById(subs_id);
-        				if (sl != null) {
-        					sl.setTouchState(SubscribeLocal.TOUCH_FINISHED);
-        					getListView().invalidateViews();
-        				}
-        			}
-
         			// FeedViewでキャッシュが作成されたか確認
     				if (feeds_cache.isExists(subs_id)) {
     					SubscribeLocal sl = subs.getItemById(subs_id);

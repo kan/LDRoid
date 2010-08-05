@@ -46,6 +46,7 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 	private String template_html;
 	private Matcher template_matcher;
 	private DateFormat dateformat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.SHORT);
+	private LDRoidApplication application;
 
 	/** Called when the activity is first created. */
     @Override
@@ -56,6 +57,8 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 		setResult(RESULT_CANCELED, getIntent());
 
         setContentView(R.layout.feed_view);
+        
+        application = (LDRoidApplication)getApplication();
         
         // FeedをHTMLに変換するためのテンプレートを準備
         template_html = getString(R.string.feed_view_template);
@@ -155,7 +158,7 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 						feeds.last_stored_on, this);
 				task.execute(subscribe_id);
 
-				getIntent().putExtra(KEY_TOUCHED, true);
+				updateTouchState(SubscribeLocal.TOUCH_EXECUTING);
 			}
 		}
 		updateButtons();
@@ -265,12 +268,22 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 		return false;
 	}
 	
+	private void updateTouchState(byte state) {
+		SubscribeLocalList subs = application.getSubscribeLocalList();
+		SubscribeLocal sl = subs.getItemById(subscribe_id);
+		if (sl != null) {
+			sl.setTouchState(state);
+		}
+	}
+	
 	@Override
 	public void onTouchFeedTaskComplete(Object sender, Exception e) {
 		if (e != null) {
 			Toast.makeText(this, e.getMessage(), Toast.LENGTH_LONG).show();
 		}
 		else {
+			updateTouchState(SubscribeLocal.TOUCH_FINISHED);
+
 			Toast.makeText(this, getText(R.string.toast_touched), Toast.LENGTH_SHORT).show();
 		}
 	}

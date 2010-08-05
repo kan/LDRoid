@@ -1,10 +1,5 @@
 package net.fushihara.LDRoid;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -34,7 +29,6 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     public static final String KEY_SUBS_ID  = "subs_id";
     public static final String KEY_SUBS_TITLE = "subs_title";
     public static final String KEY_SUBS_UNREAD_COUNT = "subs_unread_count";
-    private static final String SUBS_FILE = "subs";
     private static final int PREFETCH_COUNT = 5;
     
     private static final int REQUEST_SETTING = 1;
@@ -45,6 +39,7 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 	private int prefetch_start_position;
 	private int prefetch_limit;
 	private ProgressDialog prefetch_dialog;
+	private LDRoidApplication application;
 
 	private UnReadFeedsCache feeds_cache;
 
@@ -58,25 +53,8 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
         feeds_cache = UnReadFeedsCache.getInstance(getApplicationContext());
         
         // 保存されている subs を読み込む
-        loadFromFile();
-    }
-    
-    private void loadFromFile() {
-    	SubscribeLocalList merged = null;
-        SubscribeLocalList sll = loadSubsLocalFromFile();
-        if (sll != null) {
-        	List<Subscribe> subs = loadSubsFromFile();
-        	if (subs != null) {
-        		merged = new SubscribeLocalList(subs, sll);
-        	}
-        }
-
-        if (merged == null) {
-        	setSubs(new SubscribeLocalList());
-        }
-        else {
-        	setSubs(merged);
-        }
+        application = (LDRoidApplication)getApplication();
+        setSubs(application.getSubscribeLocalList());
     }
     
     @Override
@@ -89,7 +67,7 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 	private void loadSubs() {
 		Log.d(TAG, "loadSubs");
 
-		LDRClient client = getClient();
+		LDRClient client = application.getClient();
 		if ( client == null ) {
 			// ID/PW未設定
 	    	showSetting();
@@ -98,11 +76,6 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 
 		GetSubsTask task = new GetSubsTask(this);
 		task.execute(client);
-	}
-	
-	private LDRClient getClient() {
-		LDRoidApplication app = (LDRoidApplication)getApplication(); 
-		return app.getClient();
 	}
 	
 	public void onGetSubsTaskCompleted(List<Subscribe> result, Exception error) {
@@ -130,9 +103,10 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 		});
 		
 		// 読み込んだ subs をファイルに書き出す
-		saveSubsToFile((ArrayList<Subscribe>)result);
+		application.saveSubscribeListToFile((ArrayList<Subscribe>)result);
 		
 		SubscribeLocalList subsLocal = new SubscribeLocalList(result);
+		application.setSubscribeLocalList(subsLocal);
 		//removeSubsLocalFile(subsLocal);
 		setSubs(subsLocal);
 	}
@@ -186,7 +160,7 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 			return false;
 		}
 
-		LDRClient client = getClient();
+		LDRClient client = application.getClient();
 		if (client == null) {
 			return false;
 		}
@@ -255,79 +229,12 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 		}
 	}
 	
-	
-	@SuppressWarnings("unchecked")
-	private List<Subscribe> loadSubsFromFile() {
-		FileInputStream fis = null;
-		ObjectInputStream ois = null;
-		ArrayList<Subscribe> result = null;
-		
-		try {
-			fis = openFileInput(SUBS_FILE);
-			ois = new ObjectInputStream(fis);
-			result = (ArrayList<Subscribe>)ois.readObject();
-		} catch (IOException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
-			e.printStackTrace();
-		}
-		Log.d(TAG, "loadSubsFromFile " + (result != null));
-		
-		return result;
-	}
-	
-	private void saveSubsToFile(List<Subscribe> subs) {
-		Log.d(TAG, "saveSubsToFile");
-		FileOutputStream fos = null;
-		ObjectOutputStream oos = null;
-		try {
-			fos = openFileOutput(SUBS_FILE, MODE_PRIVATE);
-			oos = new ObjectOutputStream(fos);
-			oos.writeObject(subs);
-		} catch (IOException e) {
-			e.printStackTrace();
-		} finally {
-			if (fos != null) {
-				try {
-					fos.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-			if (oos != null) {
-				try {
-					oos.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-			}
-		}
-	}
-	
-	private void saveSubsLocalToFile() {
-		ObjToFile of = new ObjToFile(this, "subs_local");
-		of.put("0", subs);
-	}
-	
-	private SubscribeLocalList loadSubsLocalFromFile() {
-		SubscribeLocalList  sl = null;
-		try {
-			ObjToFile of = new ObjToFile(this, "subs_local");
-			sl = new SubscribeLocalList(
-					loadSubsFromFile(),
-					(SubscribeLocalList)of.get("0"));
-		}
-		catch (Exception e) {
-		}
-		return sl;
-	}
-	
 	@Override
-	protected void onStop() {
-		super.onStop();
-		saveSubsLocalToFile();
+	protected void onDestroy() {
+    	application.saveSubscribeLocalListToFile();
+		super.onDestroy();
 	}
-
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    super.onCreateOptionsMenu(menu);
@@ -377,12 +284,11 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     	switch (requestCode) {
     	case REQUEST_SETTING:
     		// 設定画面から帰ってきたらアカウントが変更されていないか確認する
-    		LDRoidApplication app = (LDRoidApplication)getApplication();
-    		LDRClient client = app.getClient();
-    		if (!client.getAccount().equals(app.getAccount())) {
+    		LDRClient client = application.getClient();
+    		if (!client.getAccount().equals(application.getAccount())) {
         		// アカウントが変更されていたら、新しいアカウントで再取得する
     			// TODO:
-    			app.clearClient();
+    			application.clearClient();
 				loadSubs();
     		}
     		break;

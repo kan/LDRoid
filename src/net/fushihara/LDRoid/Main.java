@@ -42,6 +42,7 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 	private LDRoidApplication application;
 
 	private UnReadFeedsCache feeds_cache;
+	private int subs_position;
 
 	/** Called when the activity is first created. */
     @Override
@@ -60,8 +61,6 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     @Override
     public void onResume() {
     	super.onResume();
-    	
-    	//loadSubs();
     }
     
 	private void loadSubs() {
@@ -293,8 +292,6 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     		}
     		break;
     	case REQUEST_FEEDVIEW:
-    		// FeedView から戻ったとき、既読化されていたら(RESULT_OK)
-    		// subs の unread_count を 0 にする
     		if (data != null) {
     			String subs_id = data.getStringExtra(KEY_SUBS_ID);
     			if (subs_id != null) {
@@ -308,6 +305,14 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     				}
     			}
     		}
+    		switch (resultCode) {
+    		case FeedView.RESULT_PREV:
+    			showNextFeed(-1);
+    			break;
+    		case FeedView.RESULT_NEXT:
+    			showNextFeed(1);
+    			break;
+    		}
     		break;
     	}
     }
@@ -320,6 +325,8 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
         // TODO: もしも prefetch_task で取得中のフィードが
         // クリックされた場合は、prefetch_task の終了を待たないと二重に読み込みが
         // 発生してしまうので少し無駄に待たされる
+        
+        subs_position = position;
         
         Intent i = new Intent(this, FeedView.class);
         SubscribeLocal sub = subs.get(position);
@@ -335,23 +342,26 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     public boolean onKeyDown(int keyCode, KeyEvent event) {
     	switch (keyCode) {
     	case KeyEvent.KEYCODE_S:
-    		showNextUnread();
+    		showNextFeed(0);
     		break;
     	}
     	return super.onKeyDown(keyCode, event);
     }
 
-    private void showNextUnread() {
+    private void showNextFeed(int direction) {
     	ListView list = getListView();
     	if (list.getCount() == 0) return;
 
-    	int pos = list.getSelectedItemPosition();
-    	
-		Log.d(TAG, Integer.toString(pos));
-		int top_margin = list.getHeight() / 3;
-		if (pos == -1)
-			list.setSelectionFromTop(list.getFirstVisiblePosition()+1, 0);
-		else 
-			list.setSelectionFromTop(pos + 1, top_margin);
+    	// カーソルを移動する
+    	subs_position += direction;
+    	//Log.d(TAG, "position:"+subs_position);
+    	if (subs_position < 0 || subs_position >= list.getCount()) {
+    		// 終端に達したら何もしない
+    		return ;
+    	}
+
+    	// 移動先を選択して、クリックしたことにする 
+    	list.setSelectionFromTop(subs_position, list.getMeasuredHeight() / 3);
+    	list.performItemClick(list, subs_position, 0);
     }
 }

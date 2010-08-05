@@ -29,7 +29,8 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 
 	public static final String KEY_TOUCHED = "touched";
 	
-	public static final int RESULT_NEXTUNREAD = RESULT_FIRST_USER;
+	public static final int RESULT_NEXT = RESULT_FIRST_USER;
+	public static final int RESULT_PREV = RESULT_FIRST_USER + 1;
 	
 	private WebView webView;
 	private Button prev_button;
@@ -242,6 +243,7 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 	private boolean processKey(int keyCode, KeyEvent event) {
 		if (event.getAction() == KeyEvent.ACTION_UP) {
 			Log.d(TAG, Integer.toString(keyCode));
+			
 			switch (keyCode) {
 			case KeyEvent.KEYCODE_SPACE:
 				if (event.isShiftPressed()) webView.pageUp(false);
@@ -259,8 +261,12 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 			case KeyEvent.KEYCODE_P:
 				onClick(pin_button);
 				return true;
+			case KeyEvent.KEYCODE_A:
+				setResult(RESULT_PREV);
+				finish();
+				return true;
 			case KeyEvent.KEYCODE_S:
-				setResult(RESULT_NEXTUNREAD);
+				setResult(RESULT_NEXT);
 				finish();
 				return true;
 			}

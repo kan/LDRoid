@@ -246,8 +246,16 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 			
 			switch (keyCode) {
 			case KeyEvent.KEYCODE_SPACE:
-				if (event.isShiftPressed()) webView.pageUp(false);
-				else webView.pageDown(false);
+				if (event.isShiftPressed()) {
+					if (!webView.pageUp(false)) {
+						onClick(prev_button);
+					}
+				}
+				else {
+					if (!webView.pageDown(false)) {
+						onClick(next_button);
+					}
+				}
 				return true;
 			case KeyEvent.KEYCODE_J:
 				onClick(next_button);
@@ -255,7 +263,7 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 			case KeyEvent.KEYCODE_K:
 				onClick(prev_button);
 				return true;
-			case KeyEvent.KEYCODE_O:
+			case KeyEvent.KEYCODE_V:
 				onClick(open_button);
 				return true;
 			case KeyEvent.KEYCODE_P:
@@ -267,6 +275,9 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 				return true;
 			case KeyEvent.KEYCODE_S:
 				setResult(RESULT_NEXT);
+				finish();
+				return true;
+			case KeyEvent.KEYCODE_Z:
 				finish();
 				return true;
 			}

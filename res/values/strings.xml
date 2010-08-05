@@ -26,6 +26,8 @@
 	h1 { font-size:120%; margin-top:.25em; margin-bottom:.25em; }
 	.titlebar { margin-bottom:1em; }
 	.metabar { font-size:80%; margin-top:.25em; margin-bottom:.25em; }
+	.articlebody { line-height:150%; font-size:90%; }
+	body { margin:.25em; }
 	</style>
 	</head>
 	<body id="body">

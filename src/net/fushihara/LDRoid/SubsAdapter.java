@@ -7,6 +7,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 class SubsAdapter extends BaseAdapter {
@@ -23,7 +24,7 @@ class SubsAdapter extends BaseAdapter {
 	
 	private SubscribeLocalList items;
 	private LayoutInflater inflater;
-	
+
 	public SubsAdapter(Context context, SubscribeLocalList subs) {
 		items = subs;
 		
@@ -84,6 +85,10 @@ class SubsAdapter extends BaseAdapter {
 		else {
 			t.setTextColor(title_normal);
 		}
+		
+		ImageView i = (ImageView)view.findViewById(R.id.icon);
+		GetIconTask get_icon_task = new GetIconTask(i);
+		get_icon_task.execute(s.getIcon());
 		
 		t = (TextView)view.findViewById(R.id.count);
 		t.setText(Integer.toString(s.getUnreadCount()));

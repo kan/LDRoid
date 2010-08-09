@@ -43,6 +43,10 @@ class SubscribeLocal implements Serializable {
 		return sub.title;
 	}
 	
+	public String getIcon() {
+		return sub.icon;
+	}
+
 	public String getSubscribeId() {
 		return subscribe_id;
 	}

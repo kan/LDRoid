@@ -9,6 +9,11 @@
 		android:id="@+id/ratebar"
 		android:layout_height="fill_parent"
 		android:layout_width="4dip"></TextView>
+	<ImageView
+		android:id="@+id/icon"
+		android:layout_height="fill_parent"
+		android:layout_width="20dip"
+		android:scaleType="center"></ImageView>
 	<TextView
 		android:id="@+id/title"
 		android:text="title"

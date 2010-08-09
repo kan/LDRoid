@@ -3,7 +3,7 @@
     <string name="app_name">LDRoid</string>
     <string name="prev_button">&lt;&lt;Prev</string>
     <string name="next_button">Next&gt;&gt;</string>
-    <string name="next_sub_button">次の記事&gt;&gt;</string>
+    <string name="next_sub_button">次のFeedへ&gt;&gt;</string>
     <string name="open_button">Open</string>
     <string name="pin_button">Pin</string>
     <string name="share_button">Share</string>
@@ -21,7 +21,7 @@
 	<string name="dlg_fetch_all_title">取得しています...</string>
 	
 	<string name="toast_touched">既読にしました</string>
-	<string name="toast_last_sub">最後の記事です</string>
+	<string name="toast_last_sub">最後のFeedです</string>
 
 	<string name="feed_view_template"><![CDATA[<html>
 	<head>

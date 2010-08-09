@@ -96,7 +96,11 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
         	setTitle(subscribe_title);
         }
                
-        cache = UnReadFeedsCache.getInstance(getApplicationContext());
+        loadFeeds();
+    }
+
+	private void loadFeeds() {
+		cache = UnReadFeedsCache.getInstance(getApplicationContext());
         Feeds cached_feeds = cache.getFeeds(subscribe_id);
         if (cached_feeds != null) {
         	setFeeds(cached_feeds);
@@ -105,7 +109,7 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 	        GetUnReadFeedsTask task = new GetUnReadFeedsTask(this, getClient());
 	        task.execute(subscribe_id);
         }
-    }
+	}
     
     private LDRClient getClient() {
     	LDRoidApplication app = (LDRoidApplication)getApplication();
@@ -137,7 +141,12 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
     	}
     	else {
     		prev_button.setEnabled(feed_pos > 0);
-    		next_button.setEnabled(feed_pos < feeds.size()-1);
+			next_button.setEnabled(true);
+    		if ( feed_pos < feeds.size()-1 ) {
+    			next_button.setText(R.string.next_button);
+    		} else {
+    			next_button.setText(R.string.next_sub_button);
+    		}
     	}
     	boolean isSelected = (currentFeed() != null); 
 		pin_button.setEnabled(isSelected);
@@ -209,6 +218,19 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 			if ( feed_pos < feeds.size()-1) {
 				feed_pos++;
 				loadData();
+			} else {
+				// show next sub
+				SubscribeLocalList subs = application.getSubscribeLocalList();
+				SubscribeLocal sub = subs.getNextItemById(subscribe_id);
+				if ( sub != null ) {
+		        	subscribe_id = sub.getSubscribeId();
+		        	subscribe_title = sub.getTitle();
+		        	subscribe_unread_count = sub.getUnreadCount();
+		        	setTitle(subscribe_title);
+		        	loadFeeds();
+				} else {
+					Toast.makeText(this, getText(R.string.toast_last_sub), Toast.LENGTH_SHORT).show();
+				}
 			}
 		}
 		if ( v == open_button ) {

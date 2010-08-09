@@ -108,4 +108,16 @@ class SubscribeLocalList extends ArrayList<SubscribeLocal>
 		}
 		return null;
 	}
+	
+	SubscribeLocal getNextItemById(String subscribe_id) {
+		int size = size();
+		for (int j=0; j<size; j++) {
+			if (subscribe_id.equals(get(j).getSubscribeId())) {
+				if (j < size - 1) {
+					return get(j+1);
+				}
+			}
+		}
+		return null;
+	}
 }

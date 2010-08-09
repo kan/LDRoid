@@ -225,9 +225,9 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 		}
 		if ( v == share_button ) {
 			Intent intent = new Intent(Intent.ACTION_SEND);
-			intent.setType("plain/text");
-			intent.putExtra(Intent.EXTRA_SUBJECT, currentFeed().title);
+			intent.setType("text/plain");
 			intent.putExtra(Intent.EXTRA_TEXT, currentFeed().link);
+			intent.putExtra(Intent.EXTRA_SUBJECT, currentFeed().title);
 			try {
 				startActivity(Intent.createChooser(intent, null));
 			} catch (ActivityNotFoundException  e) {

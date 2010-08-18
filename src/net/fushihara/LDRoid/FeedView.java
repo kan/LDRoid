@@ -17,6 +17,8 @@ import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.Window;
 import android.view.View.OnClickListener;
@@ -369,4 +371,38 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 		}
 	}
 	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+	    getMenuInflater().inflate(R.menu.feedview_menu, menu);
+	    // ボタンとして表示されているものはメニューからは隠す
+	    if (open_button.isShown()) {
+	    	menu.findItem(R.id.menu_open).setVisible(false);
+	    }
+	    if (share_button.isShown()) {
+	    	menu.findItem(R.id.menu_share).setVisible(false);
+	    }
+	    if (pin_button.isShown()) {
+	    	menu.findItem(R.id.menu_pin).setVisible(false);
+	    }
+		return true;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		switch (item.getItemId()) {
+		case R.id.menu_open:
+			onClick(open_button);
+			break;
+		case R.id.menu_share:
+			onClick(share_button);
+			break;
+		case R.id.menu_pin:
+			onClick(pin_button);
+			break;
+		case R.id.menu_feedview_setting:
+			// TODO: FeedViewの設定画面を開く
+			break;
+		}
+		return true;
+	}
 }

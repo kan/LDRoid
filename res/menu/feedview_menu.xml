@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu
+	xmlns:android="http://schemas.android.com/apk/res/android">
+	<item
+		android:id="@+id/menu_open"
+		android:title="@string/open_button"
+		android:icon="@android:drawable/ic_menu_view"></item>
+	<item
+		android:id="@+id/menu_pin"
+		android:title="@string/pin_button"
+		android:icon="@android:drawable/ic_menu_add"></item>
+	<item
+		android:icon="@android:drawable/ic_menu_share"
+		android:id="@+id/menu_share"
+		android:title="@string/share_button"></item>
+	<item
+		android:icon="@android:drawable/ic_menu_preferences"
+		android:id="@+id/menu_feedview_setting"
+		android:title="@string/pref_feedview_screen_title"
+		android:visible="false"></item>
+</menu>

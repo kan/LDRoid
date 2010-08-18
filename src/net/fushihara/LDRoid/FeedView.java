@@ -27,7 +27,7 @@ import android.widget.Toast;
 public class FeedView extends Activity implements OnClickListener, OnTouchFeedTaskListener {
 	private static final String TAG = "FeedView";
 
-	public static final String KEY_TOUCHED = "touched";
+	public static final String KEY_FEEDPOS = "feed_pos";
 	
 	public static final int RESULT_NEXT = RESULT_FIRST_USER;
 	public static final int RESULT_PREV = RESULT_FIRST_USER + 1;
@@ -97,6 +97,19 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
         }
                
         loadFeeds();
+    }
+    
+    @Override
+    protected void onSaveInstanceState(Bundle outState) {
+    	super.onSaveInstanceState(outState);
+    	outState.putInt(KEY_FEEDPOS, feed_pos);
+    }
+    
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+    	super.onRestoreInstanceState(savedInstanceState);
+    	feed_pos = savedInstanceState.getInt(KEY_FEEDPOS, 0);
+    	loadData();
     }
 
 	private void loadFeeds() {

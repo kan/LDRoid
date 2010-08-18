@@ -11,8 +11,10 @@ import net.fushihara.LDRoid.TouchFeedTask.OnTouchFeedTaskListener;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
@@ -98,6 +100,23 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
                
         loadFeeds();
     }
+    
+    @Override
+    protected void onResume() {
+    	super.onResume();
+    	
+        // ボタン設定を反映
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        setButtonVisibility(pin_button, pref.getBoolean("feedview_button_pin", true));
+        setButtonVisibility(share_button, pref.getBoolean("feedview_button_share", true));
+        setButtonVisibility(open_button, pref.getBoolean("feedview_button_open", true));
+    }
+    
+    // ボタンの表示状態を設定
+    private void setButtonVisibility(View button, boolean isShow) {
+    	button.setVisibility(isShow ? View.VISIBLE : View.GONE);
+    }
+    
     
     @Override
     protected void onSaveInstanceState(Bundle outState) {

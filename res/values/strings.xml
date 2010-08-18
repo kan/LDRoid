@@ -1,5 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="pref_feedview_button_pin_summary">表示しない場合もMENUから、または[p]キーで実行できます</string>
+    <string name="pref_feedview_button_share_summary">表示しない場合もMENUから実行できます</string>
+    <string name="pref_feedview_button_open_summary">表示しない場合もMENUから、または[v]キーで実行できます</string>
+    <string name="pref_feedview_screen_summary">記事を表示する画面の設定</string>
+    <string name="pref_feedview_button_pin_title">Pin ボタンを表示</string>
+    <string name="pref_feedview_button_share_title">Share ボタンを表示</string>
+    <string name="pref_feedview_button_open_title">Open ボタンを表示</string>
+    <string name="pref_feedview_button_category_title">表示するボタン</string>
+    <string name="pref_feedview_screen_title">FeedView</string>
     <string name="app_name">LDRoid</string>
     <string name="prev_button">&lt;&lt;Prev</string>
     <string name="next_button">Next&gt;&gt;</string>

@@ -45,4 +45,12 @@ public class GetIconTask extends AsyncTask<String, Void, Bitmap> {
 			iv.setImageBitmap(result);
 		}
 	}
+	
+	// ƒLƒƒƒbƒVƒ…Ï‚İ‚ÌBitmap‚ğæ“¾
+	public static Bitmap getCache(String uri) {
+		if(cache.containsKey(uri)) {
+			return cache.get(uri);
+		}
+		return null;
+	}
 }

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="fill_parent"
+	android:layout_height="35dip"
+	android:minHeight="38dip"
+	android:paddingRight="10dip">
+	<TextView
+		android:id="@+id/ratebar"
+		android:layout_height="fill_parent"
+		android:layout_width="4dip"></TextView>
+	<ImageView
+		android:id="@+id/icon"
+		android:layout_height="fill_parent"
+		android:layout_width="32px"
+		android:layout_marginLeft="4dip"
+		android:scaleType="fitCenter"></ImageView>
+	<TextView
+		android:id="@+id/title"
+		android:text="title"
+		android:textSize="18sp"
+		android:layout_margin="4dip"
+		android:gravity="center_vertical"
+		android:layout_height="fill_parent"
+		android:layout_width="wrap_content"
+		android:layout_weight="1"></TextView>
+	<TextView
+		android:layout_width="wrap_content"
+		android:id="@+id/count"
+		android:text="0"
+		android:textSize="16sp"
+		android:paddingLeft="8sp"
+		android:gravity="center_vertical"
+		android:layout_height="fill_parent"></TextView>
+</LinearLayout>

@@ -3,6 +3,7 @@ package net.fushihara.LDRoid;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.graphics.Bitmap;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,7 +25,7 @@ class SubsAdapter extends BaseAdapter {
 	
 	private SubscribeLocalList items;
 	private LayoutInflater inflater;
-
+	
 	public SubsAdapter(Context context, SubscribeLocalList subs) {
 		items = subs;
 		
@@ -69,13 +70,20 @@ class SubsAdapter extends BaseAdapter {
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		View view = convertView;
-		if (view == null) {
+		ViewHolder holder;
+		if (convertView == null) {
 			view = inflater.inflate(R.layout.subs_row, null);
+			holder = new ViewHolder(view);
+			view.setTag(holder);
 		}
+		else {
+			holder = (ViewHolder)view.getTag(); 
+		}
+		
 		SubscribeLocal s = items.get(position);
 		
-		TextView t = (TextView)view.findViewById(R.id.title);
-		t.setText(s.getTitle());
+		TextView t = holder.title;
+		holder.title.setText(s.getTitle());
 		if (s.getUnreadCount() == 0) {
 			t.setTextColor(title_empty);
 		}
@@ -86,14 +94,22 @@ class SubsAdapter extends BaseAdapter {
 			t.setTextColor(title_normal);
 		}
 		
-		ImageView i = (ImageView)view.findViewById(R.id.icon);
-		GetIconTask get_icon_task = new GetIconTask(i);
-		get_icon_task.execute(s.getIcon());
+		ImageView i = holder.icon;
 		
-		t = (TextView)view.findViewById(R.id.count);
+		Bitmap bmp = GetIconTask.getCache(s.getIcon());
+		if (bmp != null) {
+			i.setImageBitmap(bmp);
+		}
+		else {
+			i.setImageBitmap(null);
+			GetIconTask get_icon_task = new GetIconTask(i);
+			get_icon_task.execute(s.getIcon());
+		}
+		
+		t = holder.count;
 		t.setText(Integer.toString(s.getUnreadCount()));
 		
-		t = (TextView)view.findViewById(R.id.ratebar);
+		t = holder.ratebar;
 		int rate = s.getRate();
 		if (rate >= 0 && rate <= 5) {
 			t.setBackgroundColor(rateColors[rate]);
@@ -105,4 +121,20 @@ class SubsAdapter extends BaseAdapter {
 		return view;
 	}
 
+	// Adapterが生成するViewのTagに保存するクラス
+	// リストのViewのTagにこのObjectを保存しておき、スクロールや再描画でgetViewが
+	// 呼び出されるたびにfindViewById 等が何度も無駄に実行されるのを防ぐ
+	private static class ViewHolder {
+		public TextView title;
+		public TextView count;
+		public ImageView icon;
+		public TextView ratebar;
+		
+		public ViewHolder(View view) {
+			title = (TextView)view.findViewById(R.id.title);
+			icon = (ImageView)view.findViewById(R.id.icon);
+			count = (TextView)view.findViewById(R.id.count);
+			ratebar = (TextView)view.findViewById(R.id.ratebar);
+		}
+	}
 }

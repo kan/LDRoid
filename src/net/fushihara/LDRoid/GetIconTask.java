@@ -9,20 +9,27 @@ import java.util.HashMap;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
-import android.widget.ImageView;
 
 public class GetIconTask extends AsyncTask<String, Void, Bitmap> {
 	
-	private ImageView iv;
 	private static HashMap<String,Bitmap> cache = new HashMap<String,Bitmap>();
 	
-	GetIconTask(ImageView i) {
-		this.iv = i;
+	public interface OnGetIconListener {
+		public void onGetIconTaskComplete(Object sender, String uri, Bitmap result);
+	}
+	
+	private OnGetIconListener listener;
+	private String uri;
+
+	GetIconTask(OnGetIconListener listener) {
+		this.listener = listener;
 	}
 
 	@Override
 	protected Bitmap doInBackground(String... uris) {
 		try {
+			uri = uris[0];
+			
 			if(cache.containsKey(uris[0])) {
 				return cache.get(uris[0]);
 			}
@@ -41,8 +48,8 @@ public class GetIconTask extends AsyncTask<String, Void, Bitmap> {
 	
 	@Override
 	protected void onPostExecute(Bitmap result) {
-		if ( result != null ) {
-			iv.setImageBitmap(result);
+		if (listener != null) {
+			listener.onGetIconTaskComplete(this, uri, result);
 		}
 	}
 	

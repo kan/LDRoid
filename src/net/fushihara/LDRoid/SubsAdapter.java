@@ -1,5 +1,6 @@
 package net.fushihara.LDRoid;
 
+import java.util.ArrayList;
 import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
@@ -11,7 +12,7 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-class SubsAdapter extends BaseAdapter {
+class SubsAdapter extends BaseAdapter implements GetIconTask.OnGetIconListener {
 	
 	@SuppressWarnings("unused")
 	private static final String TAG = "SubsAdapter";
@@ -25,6 +26,9 @@ class SubsAdapter extends BaseAdapter {
 	
 	private SubscribeLocalList items;
 	private LayoutInflater inflater;
+	
+	private GetIconTask get_icon_task;
+	private ArrayList<View> views;
 	
 	public SubsAdapter(Context context, SubscribeLocalList subs) {
 		items = subs;
@@ -50,6 +54,8 @@ class SubsAdapter extends BaseAdapter {
 	        title_empty = a.getColor(R.styleable.SubsAdapter_feedTitleColorEmpty, 0xFF707070);
 	        title_prefetched = a.getColor(R.styleable.SubsAdapter_feedTitleColorPrefetched, 0xFF00D7D7);
 		}
+		
+		views = new ArrayList<View>();
 	}
 	
 	@Override
@@ -73,6 +79,8 @@ class SubsAdapter extends BaseAdapter {
 		ViewHolder holder;
 		if (convertView == null) {
 			view = inflater.inflate(R.layout.subs_row, null);
+			views.add(view);
+			
 			holder = new ViewHolder(view);
 			view.setTag(holder);
 		}
@@ -81,6 +89,7 @@ class SubsAdapter extends BaseAdapter {
 		}
 		
 		SubscribeLocal s = items.get(position);
+		holder.subs_local = s;
 		
 		TextView t = holder.title;
 		holder.title.setText(s.getTitle());
@@ -98,12 +107,18 @@ class SubsAdapter extends BaseAdapter {
 		
 		Bitmap bmp = GetIconTask.getCache(s.getIcon());
 		if (bmp != null) {
+			// アイコンがキャッシュ済みの場合はすぐに設定
 			i.setImageBitmap(bmp);
 		}
 		else {
-			i.setImageBitmap(null);
-			GetIconTask get_icon_task = new GetIconTask(i);
-			get_icon_task.execute(s.getIcon());
+			// アイコンのキャッシュがない場合はとりあえず空に設定
+			i.setImageDrawable(null);
+
+			if (get_icon_task == null) {
+				// 実行中のアイコン取得タスクが無い場合は、タスクを開始する
+				get_icon_task = new GetIconTask(this);
+				get_icon_task.execute(s.getIcon());
+			}
 		}
 		
 		t = holder.count;
@@ -129,12 +144,50 @@ class SubsAdapter extends BaseAdapter {
 		public TextView count;
 		public ImageView icon;
 		public TextView ratebar;
+		public SubscribeLocal subs_local;
 		
 		public ViewHolder(View view) {
 			title = (TextView)view.findViewById(R.id.title);
 			icon = (ImageView)view.findViewById(R.id.icon);
 			count = (TextView)view.findViewById(R.id.count);
 			ratebar = (TextView)view.findViewById(R.id.ratebar);
+		}
+	}
+
+	// アイコンの取得完了
+	@Override
+	public void onGetIconTaskComplete(Object sender, String uri, Bitmap result) {
+		get_icon_task = null;
+
+		// 取得したアイコンを必要としているviewを探す
+		if (result != null) {
+			int views_size = views.size();
+			ViewHolder holder;
+			for (int j=0; j<views_size; j++) {
+				holder = (ViewHolder)views.get(j).getTag();
+				if (holder.subs_local.getIcon() == uri) {
+					holder.icon.setImageBitmap(result);
+				}
+			}
+			getNextIcon();
+		}
+		else {
+			// エラーなどで画像が取得できなかったときは getNextIcon() を呼ばない
+			// 呼ぶと永久に同じ画像を要求してしまう
+		}
+	}
+	
+	// アイコンが読み込まれていないビューがあれば、新しいタスクを開始する
+	private void getNextIcon() {
+		int views_size = views.size();
+		ViewHolder holder;
+		for (int j=0; j<views_size; j++) {
+			holder = (ViewHolder)views.get(j).getTag();
+			if (holder.icon.getDrawable() == null) {
+				get_icon_task = new GetIconTask(this);
+				get_icon_task.execute(holder.subs_local.getIcon());
+				break;
+			}
 		}
 	}
 }

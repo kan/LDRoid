@@ -5,6 +5,7 @@ import android.content.Context;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -103,16 +104,14 @@ class SubsAdapter extends BaseAdapter implements GetIconTask.OnGetIconListener {
 			t.setTextColor(title_normal);
 		}
 		
-		ImageView i = holder.icon;
-		
 		Bitmap bmp = GetIconTask.getCache(s.getIcon());
 		if (bmp != null) {
 			// アイコンがキャッシュ済みの場合はすぐに設定
-			i.setImageBitmap(bmp);
+			holder.setBitmap(bmp);
 		}
 		else {
 			// アイコンのキャッシュがない場合はとりあえず空に設定
-			i.setImageDrawable(null);
+			holder.setBitmap(null);
 
 			if (get_icon_task == null) {
 				// 実行中のアイコン取得タスクが無い場合は、タスクを開始する
@@ -152,6 +151,18 @@ class SubsAdapter extends BaseAdapter implements GetIconTask.OnGetIconListener {
 			count = (TextView)view.findViewById(R.id.count);
 			ratebar = (TextView)view.findViewById(R.id.ratebar);
 		}
+		
+		public void setBitmap(Bitmap bmp) {
+			if (bmp != null) {
+				icon.setImageBitmap(bmp);
+				
+				BitmapDrawable bd = (BitmapDrawable)icon.getDrawable();
+				bd.setFilterBitmap(false);
+			}
+			else {
+				icon.setImageDrawable(null);
+			}
+		}
 	}
 
 	// アイコンの取得完了
@@ -166,7 +177,7 @@ class SubsAdapter extends BaseAdapter implements GetIconTask.OnGetIconListener {
 			for (int j=0; j<views_size; j++) {
 				holder = (ViewHolder)views.get(j).getTag();
 				if (holder.subs_local.getIcon() == uri) {
-					holder.icon.setImageBitmap(result);
+					holder.setBitmap(result);
 				}
 			}
 			getNextIcon();

@@ -374,6 +374,11 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 	    getMenuInflater().inflate(R.menu.feedview_menu, menu);
+		return true;
+	}
+	
+	@Override
+	public boolean onPrepareOptionsMenu(Menu menu) {
 	    // ボタンとして表示されているものはメニューからは隠す
 	    if (open_button.isShown()) {
 	    	menu.findItem(R.id.menu_open).setVisible(false);
@@ -384,7 +389,7 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 	    if (pin_button.isShown()) {
 	    	menu.findItem(R.id.menu_pin).setVisible(false);
 	    }
-		return true;
+		return super.onPrepareOptionsMenu(menu);
 	}
 	
 	@Override

@@ -95,12 +95,9 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
         if (subscribe_id == null) {
         	Bundle extra = getIntent().getExtras();
         	subscribe_id = extra != null ? extra.getString(Main.KEY_SUBS_ID) : null;
-        	subscribe_title = extra != null ? extra.getString(Main.KEY_SUBS_TITLE) : null;
-        	subscribe_unread_count = extra != null ? extra.getInt(Main.KEY_SUBS_UNREAD_COUNT) : null;
-        	setTitle(subscribe_title);
         }
                
-        loadFeeds();
+        loadFeeds(subscribe_id);
     }
     
     @Override
@@ -133,7 +130,16 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
     	loadData();
     }
 
-	private void loadFeeds() {
+	private void loadFeeds(String new_subscribe_id) {
+		subscribe_id = new_subscribe_id;
+		
+		SubscribeLocalList subs = application.getSubscribeLocalList();
+		SubscribeLocal sub = subs.getItemById(subscribe_id);
+
+    	subscribe_title = sub.getTitle();
+    	subscribe_unread_count = sub.getUnreadCount();
+    	setTitle(subscribe_title);
+		
 		cache = UnReadFeedsCache.getInstance(getApplicationContext());
         Feeds cached_feeds = cache.getFeeds(subscribe_id);
         if (cached_feeds != null) {
@@ -197,6 +203,7 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 			
 			if ( feed_pos + 1 == feeds.size() && subscribe_unread_count > 0) {
 				// 既読にするタスクを開始
+				subscribe_unread_count = 0;
 				
 				TouchFeedTask task = new TouchFeedTask(getClient(), 
 						feeds.last_stored_on, this);
@@ -257,11 +264,7 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 				SubscribeLocalList subs = application.getSubscribeLocalList();
 				SubscribeLocal sub = subs.getNextItemById(subscribe_id);
 				if ( sub != null ) {
-		        	subscribe_id = sub.getSubscribeId();
-		        	subscribe_title = sub.getTitle();
-		        	subscribe_unread_count = sub.getUnreadCount();
-		        	setTitle(subscribe_title);
-		        	loadFeeds();
+		        	loadFeeds(sub.getSubscribeId());
 				} else {
 					Toast.makeText(this, getText(R.string.toast_last_sub), Toast.LENGTH_SHORT).show();
 				}

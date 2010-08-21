@@ -27,8 +27,6 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     public static final String KEY_LOGIN_ID = "login_id";
     public static final String KEY_PASSWORD = "password";
     public static final String KEY_SUBS_ID  = "subs_id";
-    public static final String KEY_SUBS_TITLE = "subs_title";
-    public static final String KEY_SUBS_UNREAD_COUNT = "subs_unread_count";
     private static final int PREFETCH_COUNT = 5;
     
     private static final int REQUEST_SETTING = 1;
@@ -331,8 +329,6 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
         Intent i = new Intent(this, FeedView.class);
         SubscribeLocal sub = subs.get(position);
         i.putExtra(KEY_SUBS_ID, sub.getSubscribeId());
-        i.putExtra(KEY_SUBS_TITLE, sub.getTitle());
-        i.putExtra(KEY_SUBS_UNREAD_COUNT, sub.getUnreadCount());
         startActivityForResult(i, REQUEST_FEEDVIEW);
 
         prefetchStart(position + 1, PREFETCH_COUNT);

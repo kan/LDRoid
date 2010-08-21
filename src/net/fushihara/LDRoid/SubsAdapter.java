@@ -30,6 +30,7 @@ class SubsAdapter extends BaseAdapter implements GetIconTask.OnGetIconListener {
 	
 	private GetIconTask get_icon_task;
 	private ArrayList<View> views;
+	private boolean feed_icon_visibility; 
 	
 	public SubsAdapter(Context context, SubscribeLocalList subs) {
 		items = subs;
@@ -104,19 +105,22 @@ class SubsAdapter extends BaseAdapter implements GetIconTask.OnGetIconListener {
 			t.setTextColor(title_normal);
 		}
 		
-		Bitmap bmp = GetIconTask.getCache(s.getIcon());
-		if (bmp != null) {
-			// アイコンがキャッシュ済みの場合はすぐに設定
-			holder.setBitmap(bmp);
-		}
-		else {
-			// アイコンのキャッシュがない場合はとりあえず空に設定
-			holder.setBitmap(null);
-
-			if (get_icon_task == null) {
-				// 実行中のアイコン取得タスクが無い場合は、タスクを開始する
-				get_icon_task = new GetIconTask(this);
-				get_icon_task.execute(s.getIcon());
+		holder.setIconVisibility(feed_icon_visibility);
+		if (feed_icon_visibility) {
+			Bitmap bmp = GetIconTask.getCache(s.getIcon());
+			if (bmp != null) {
+				// アイコンがキャッシュ済みの場合はすぐに設定
+				holder.setBitmap(bmp);
+			}
+			else {
+				// アイコンのキャッシュがない場合はとりあえず空に設定
+				holder.setBitmap(null);
+	
+				if (get_icon_task == null) {
+					// 実行中のアイコン取得タスクが無い場合は、タスクを開始する
+					get_icon_task = new GetIconTask(this);
+					get_icon_task.execute(s.getIcon());
+				}
 			}
 		}
 		
@@ -135,6 +139,10 @@ class SubsAdapter extends BaseAdapter implements GetIconTask.OnGetIconListener {
 		return view;
 	}
 
+	public void setFeedIconVisibility(boolean visible) {
+		feed_icon_visibility = visible;
+	}
+	
 	// Adapterが生成するViewのTagに保存するクラス
 	// リストのViewのTagにこのObjectを保存しておき、スクロールや再描画でgetViewが
 	// 呼び出されるたびにfindViewById 等が何度も無駄に実行されるのを防ぐ
@@ -152,6 +160,10 @@ class SubsAdapter extends BaseAdapter implements GetIconTask.OnGetIconListener {
 			ratebar = (TextView)view.findViewById(R.id.ratebar);
 		}
 		
+		public void setIconVisibility(boolean feedIconVisibility) {
+			icon.setVisibility(feedIconVisibility ? View.VISIBLE : View.GONE);
+		}
+
 		public void setBitmap(Bitmap bmp) {
 			if (bmp != null) {
 				icon.setImageBitmap(bmp);

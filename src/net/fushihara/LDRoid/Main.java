@@ -12,7 +12,9 @@ import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
@@ -41,6 +43,7 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 
 	private UnReadFeedsCache feeds_cache;
 	private int subs_position;
+	private boolean subs_feed_icon;
 
 	/** Called when the activity is first created. */
     @Override
@@ -59,6 +62,13 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
     @Override
     public void onResume() {
     	super.onResume();
+    	
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+        subs_feed_icon = pref.getBoolean("subs_feed_icon", true);
+        
+        SubsAdapter adapter = (SubsAdapter)getListAdapter();
+    	adapter.setFeedIconVisibility(subs_feed_icon);
+    	getListView().invalidateViews();
     }
     
 	private void loadSubs() {
@@ -122,6 +132,7 @@ public class Main extends ListActivity implements OnPrefetchUnReadFeedsListener 
 		}
 		
 		SubsAdapter adapter = new SubsAdapter(this, subs);
+		adapter.setFeedIconVisibility(subs_feed_icon);
 		setListAdapter(adapter);
         prefetchStart(0, PREFETCH_COUNT);
 	}

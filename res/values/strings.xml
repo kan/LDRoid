@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="pref_subs_screen_title">フィードのリスト</string>
+    <string name="pref_subs_icon">アイコンを表示</string>
     <string name="pref_feedview_button_pin_summary">表示しない場合もMENUから、または[p]キーで実行できます</string>
     <string name="pref_feedview_button_share_summary">表示しない場合もMENUから実行できます</string>
     <string name="pref_feedview_button_open_summary">表示しない場合もMENUから、または[v]キーで実行できます</string>

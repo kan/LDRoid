@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen
+	xmlns:android="http://schemas.android.com/apk/res/android">
+	<PreferenceScreen
+		android:title="@string/pref_subs_screen_title">
+		<CheckBoxPreference
+			android:key="subs_feed_icon"
+			android:title="@string/pref_subs_icon"
+			android:defaultValue="true"
+			android:textSize="12sp" />
+	</PreferenceScreen>
+
+</PreferenceScreen>

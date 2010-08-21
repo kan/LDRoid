@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string-array
+		name="entries_feedview_order">
+		<item>新しい順</item>
+		<item>古い順</item>
+	</string-array>
+	<string-array
+		name="entryvalues_feedview_order">
+		<item>0</item>
+		<item>1</item>
+	</string-array>
+</resources>

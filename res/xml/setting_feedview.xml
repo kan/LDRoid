@@ -4,6 +4,12 @@
 	<PreferenceScreen
 		android:title="@string/pref_feedview_screen_title"
 		android:summary="@string/pref_feedview_screen_summary">
+		<ListPreference
+			android:key="feedview_order"
+			android:title="@string/pref_feedview_order"
+			android:entryValues="@array/entryvalues_feedview_order"
+			android:entries="@array/entries_feedview_order"
+			android:defaultValue="0"></ListPreference>
 		<PreferenceCategory
 			android:title="@string/pref_feedview_button_category_title">
 			<CheckBoxPreference

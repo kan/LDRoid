@@ -36,6 +36,9 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 	public static final int RESULT_NEXT = RESULT_FIRST_USER;
 	public static final int RESULT_PREV = RESULT_FIRST_USER + 1;
 	
+	private static final String FEED_ORDER_NORMAL = "0"; 
+	private static final String FEED_ORDER_REVERSE = "1"; 
+	
 	private WebView webView;
 	private Button prev_button;
 	private Button next_button;
@@ -52,13 +55,14 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 	private Matcher template_matcher;
 	private DateFormat dateformat = DateFormat.getDateTimeInstance(DateFormat.LONG, DateFormat.SHORT);
 	private LDRoidApplication application;
+	private String feed_order;
 
 	/** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle instance) {
         super.onCreate(instance);
         
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
+         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
 		setResult(RESULT_CANCELED, getIntent());
 
         setContentView(R.layout.feed_view);
@@ -90,7 +94,10 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
         
         webView.setWebViewClient(new FeedViewWebViewClient());
         
-        subscribe_id = instance != null ? instance.getString(Main.KEY_SUBS_ID) : null;
+        SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(this);
+    	feed_order = pref.getString("feedview_order", FEED_ORDER_NORMAL); 
+
+    	subscribe_id = instance != null ? instance.getString(Main.KEY_SUBS_ID) : null;
         
         if (subscribe_id == null) {
         	Bundle extra = getIntent().getExtras();
@@ -109,6 +116,12 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
         setButtonVisibility(pin_button, pref.getBoolean("feedview_button_pin", true));
         setButtonVisibility(share_button, pref.getBoolean("feedview_button_share", true));
         setButtonVisibility(open_button, pref.getBoolean("feedview_button_open", true));
+
+        // feed_orderの設定が変更されていた場合、記事を再表示する
+        String order = pref.getString("feedview_order", feed_order); 
+        if (order != feed_order) {
+        	loadData();
+        }
     }
     
     // ボタンの表示状態を設定
@@ -295,7 +308,10 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 	}
 
 	private Feed currentFeed() {
-		if (feeds == null || feeds.size()==0) return null;
+		if (feeds == null || feed_pos >= feeds.size()) return null;
+		if (feed_order.equals(FEED_ORDER_REVERSE)) {
+			return feeds.get(feeds.size() - 1 - feed_pos);
+		}
 		return feeds.get(feed_pos);
 	}
 

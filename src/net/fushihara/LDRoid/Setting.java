@@ -8,5 +8,6 @@ public class Setting extends PreferenceActivity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.setting);
+        addPreferencesFromResource(R.xml.setting_feedview);
     }
 }

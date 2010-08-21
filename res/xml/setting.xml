@@ -19,27 +19,5 @@
 			android:defaultValue="" />
 	</PreferenceScreen>
 
-	<PreferenceScreen
-		android:title="@string/pref_feedview_screen_title"
-		android:summary="@string/pref_feedview_screen_summary">
-		<PreferenceCategory
-			android:title="@string/pref_feedview_button_category_title">
-			<CheckBoxPreference
-				android:title="@string/pref_feedview_button_open_title"
-				android:key="feedview_button_open"
-				android:defaultValue="true"
-				android:summary="@string/pref_feedview_button_open_summary" />
-			<CheckBoxPreference
-				android:key="feedview_button_share"
-				android:title="@string/pref_feedview_button_share_title"
-				android:defaultValue="true"
-				android:summary="@string/pref_feedview_button_share_summary" />
-			<CheckBoxPreference
-				android:key="feedview_button_pin"
-				android:title="@string/pref_feedview_button_pin_title"
-				android:defaultValue="true"
-				android:summary="@string/pref_feedview_button_pin_summary" />
-		</PreferenceCategory>
-	</PreferenceScreen>
 </PreferenceScreen>
  

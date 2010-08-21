@@ -124,8 +124,7 @@ class SubsAdapter extends BaseAdapter implements GetIconTask.OnGetIconListener {
 			}
 		}
 		
-		t = holder.count;
-		t.setText(Integer.toString(s.getUnreadCount()));
+		holder.setUnreadCount(s.getUnreadCount());
 		
 		t = holder.ratebar;
 		int rate = s.getRate();
@@ -160,6 +159,16 @@ class SubsAdapter extends BaseAdapter implements GetIconTask.OnGetIconListener {
 			ratebar = (TextView)view.findViewById(R.id.ratebar);
 		}
 		
+		public void setUnreadCount(int unreadCount) {
+			if (unreadCount > 0) {
+				count.setText(Integer.toString(unreadCount));
+				count.setVisibility(View.VISIBLE);
+			}
+			else {
+				count.setVisibility(View.GONE);
+			}
+		}
+
 		public void setIconVisibility(boolean feedIconVisibility) {
 			icon.setVisibility(feedIconVisibility ? View.VISIBLE : View.GONE);
 		}

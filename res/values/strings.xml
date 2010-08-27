@@ -11,9 +11,10 @@
     <string name="pref_feedview_button_share_title">Share ボタンを表示</string>
     <string name="pref_feedview_button_open_title">Open ボタンを表示</string>
     <string name="pref_feedview_button_category_title">表示するボタン</string>
-    <string name="pref_feedview_screen_title">FeedView</string>
+    <string name="pref_feedview_screen_title">フィード閲覧画面</string>
     <string name="app_name">LDRoid</string>
     <string name="prev_button">&lt;&lt;Prev</string>
+    <string name="prev_sub_button">&lt;&lt;前のFeedへ</string>
     <string name="next_button">Next&gt;&gt;</string>
     <string name="next_sub_button">次のFeedへ&gt;&gt;</string>
     <string name="open_button">Open</string>

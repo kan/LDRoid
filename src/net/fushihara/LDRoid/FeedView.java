@@ -193,7 +193,12 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
     		next_button.setEnabled(false);
     	}
     	else {
-    		prev_button.setEnabled(feed_pos > 0);
+    		prev_button.setEnabled(true);
+    		if ( feed_pos == 0 ) {
+    			prev_button.setText(R.string.prev_sub_button);
+    		} else {
+    			prev_button.setText(R.string.prev_button);
+    		}
 			next_button.setEnabled(true);
     		if ( feed_pos < feeds.size()-1 ) {
     			next_button.setText(R.string.next_button);
@@ -266,6 +271,10 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 			if ( feed_pos > 0 ) {
 				feed_pos--;
 				loadData();
+			} else {
+				// show prev sub
+				setResult(RESULT_PREV);
+				finish();
 			}
 		}
 		if ( v == next_button ) {
@@ -274,6 +283,7 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 				loadData();
 			} else {
 				// show next sub
+				/*
 				SubscribeLocalList subs = application.getSubscribeLocalList();
 				SubscribeLocal sub = subs.getNextItemById(subscribe_id);
 				if ( sub != null ) {
@@ -281,6 +291,9 @@ public class FeedView extends Activity implements OnClickListener, OnTouchFeedTa
 				} else {
 					Toast.makeText(this, getText(R.string.toast_last_sub), Toast.LENGTH_SHORT).show();
 				}
+                */
+				setResult(RESULT_NEXT);
+				finish();
 			}
 		}
 		if ( v == open_button ) {
